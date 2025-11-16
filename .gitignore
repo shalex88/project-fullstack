@@ -1,0 +1,21 @@
+# Node / TypeScript
+node_modules/
+dist/
+build/
+*.log
+.env*
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Frontend build artifacts
+frontend/node_modules/
+frontend/dist/
+
+# Backend build artifacts
+backend/node_modules/
+backend/dist/
+
+# Coverage / test
+coverage/
