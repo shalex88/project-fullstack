@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import Player, { PlayerRef } from '../components/Player';
 import Sidebar from '../components/Sidebar';
-import { getStreamUrl, getZoom, setZoom, getFocus, setFocus, setAutofocus, getCameraInfo, setStabilization } from '../services/api';
+import { getStreamUrl, getZoom, setZoom, getFocus, setFocus, setAutofocus, getCameraInfo, setStabilization, detectCameraCapabilities, CameraCapabilities } from '../services/api';
 
 export default function Dashboard() {
   const [streamUrl, setStreamUrl] = useState<string>('');
@@ -13,14 +13,24 @@ export default function Dashboard() {
   const [cameraInfo, setCameraInfo] = useState<string>('');
   const [connected, setConnected] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string>('');
+  const [capabilities, setCapabilities] = useState<CameraCapabilities>({
+    zoom: true,
+    focus: true,
+    autofocus: true,
+    stabilization: true,
+  });
   const playerRef = useRef<PlayerRef>(null);
 
   useEffect(() => {
     const initCamera = async () => {
       try {
+        // First detect what features are available
+        const caps = await detectCameraCapabilities();
+        setCapabilities(caps);
+
         const [url, currentZoom, info] = await Promise.all([
           getStreamUrl(),
-          getZoom(),
+          caps.zoom ? getZoom() : Promise.resolve(0),
           getCameraInfo()
         ]);
         setStreamUrl(url);
@@ -132,6 +142,7 @@ export default function Dashboard() {
         connected={connected}
         statusMessage={statusMessage}
         cameraInfo={cameraInfo}
+        capabilities={capabilities}
       />
 
       <main className="main-content">

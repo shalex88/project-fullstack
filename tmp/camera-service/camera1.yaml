@@ -7,4 +7,5 @@ app:
   core:
     camera: core
   infrastructure:
-    camera: fake_advanced
+    camera: fake_simple
+    # camera: fake_advanced

@@ -332,6 +332,21 @@ body {
   color: var(--text-muted);
 }
 
+/* Disabled Toggle Switch */
+.toggle-switch.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.toggle-switch input:disabled {
+  cursor: not-allowed;
+}
+
+.toggle-switch.disabled .toggle-label {
+  color: var(--text-muted);
+}
+
 /* Camera Info */
 .control-section.camera-info {
   padding-top: 16px;

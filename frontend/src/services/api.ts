@@ -71,3 +71,76 @@ export async function setStabilization(enable: boolean): Promise<boolean> {
   const data = await res.json();
   return data.enable;
 }
+
+export interface CameraCapabilities {
+  zoom: boolean;
+  focus: boolean;
+  autofocus: boolean;
+  stabilization: boolean;
+}
+
+export async function detectCameraCapabilities(): Promise<CameraCapabilities> {
+  const capabilities: CameraCapabilities = {
+    zoom: true,
+    focus: true,
+    autofocus: true,
+    stabilization: true,
+  };
+
+  // Test stabilization by trying to set it
+  try {
+    const res = await fetch(`${API_BASE}/camera/stabilization`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ enable: false }),
+    });
+    // 500 or 501 means not supported/implemented
+    if (res.status === 500 || res.status === 501) {
+      capabilities.stabilization = false;
+      console.log('Stabilization not supported (status:', res.status, ')');
+    }
+  } catch (err) {
+    console.warn('Failed to detect stabilization capability:', err);
+  }
+
+  // Test autofocus
+  try {
+    const res = await fetch(`${API_BASE}/camera/autofocus`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ enable: true }),
+    });
+    if (res.status === 500 || res.status === 501) {
+      capabilities.autofocus = false;
+      console.log('Autofocus not supported (status:', res.status, ')');
+    }
+  } catch (err) {
+    console.warn('Failed to detect autofocus capability:', err);
+  }
+
+  // Test focus (GET should succeed if supported)
+  try {
+    const res = await fetch(`${API_BASE}/camera/focus`);
+    if (res.status === 500 || res.status === 501) {
+      capabilities.focus = false;
+      capabilities.autofocus = false;
+      console.log('Focus not supported (status:', res.status, ')');
+    }
+  } catch (err) {
+    console.warn('Failed to detect focus capability:', err);
+  }
+
+  // Test zoom
+  try {
+    const res = await fetch(`${API_BASE}/camera/zoom`);
+    if (res.status === 500 || res.status === 501) {
+      capabilities.zoom = false;
+      console.log('Zoom not supported (status:', res.status, ')');
+    }
+  } catch (err) {
+    console.warn('Failed to detect zoom capability:', err);
+  }
+
+  console.log('Detected capabilities:', capabilities);
+  return capabilities;
+}
