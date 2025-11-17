@@ -129,3 +129,174 @@ An operator can view and modify camera settings (e.g., resolution, frame rate, f
 - **SC-003**: 90% of operators can successfully complete the P1 flow (start playback, zoom in or out, stop playback) on the first attempt without assistance.
 - **SC-004**: Snapshot is produced within 1 second for at least 95% of requests while a stream is active.
 - **SC-005**: Dashboard reflects offline or error states within 1 second of detection and prevents unavailable actions.
+
+## Packaging & Deployment *(mandatory)*
+
+### Distribution Requirements
+
+The application MUST be distributed as two separate Debian packages for production deployment on Linux systems.
+
+#### Backend Package: `api-server`
+
+**Package Contents**:
+
+- Single self-contained executable binary compiled from TypeScript/Node.js source
+- No separate Node.js runtime required
+- No node_modules dependencies
+- systemd service unit file for automatic startup and management
+- Default configuration files
+
+**Compilation Approach**:
+
+- Use `pkg` or `nexe` to compile backend into standalone executable
+- Binary includes all runtime dependencies
+- Target architecture: x64 Linux
+
+**Installation Structure**:
+
+```text
+/opt/api-server/
+  ├── bin/api-server          # Standalone executable
+  ├── config/
+  │   └── api-server.conf     # Default configuration
+  └── .env.example                  # Environment template
+
+/etc/systemd/system/
+  └── api-server.service      # systemd service unit
+
+/var/log/api-server/          # Log directory
+```
+
+**Package Metadata**:
+
+- Package name: `api-server`
+- Dependencies: None (self-contained)
+- Recommends: `camera-service` (the actual camera gRPC service)
+- Service port: 3000 (default, configurable)
+
+#### Frontend Package: `web-dashboard`
+
+**Package Contents**:
+
+- Production-optimized static assets (HTML, CSS, JavaScript bundles)
+- nginx configuration for serving the dashboard
+- nginx site configuration file
+
+**Build Process**:
+
+- Run `npm run build` to create production build via Vite
+- All JavaScript/CSS bundled and minified
+- All dependencies compiled into static assets
+
+**Installation Structure**:
+
+```text
+/var/www/web-dashboard/
+  ├── index.html
+  ├── assets/
+  │   ├── index-[hash].js
+  │   ├── index-[hash].css
+  │   └── [other hashed assets]
+  └── favicon.ico
+
+/etc/nginx/sites-available/
+  └── web-dashboard           # nginx site config
+
+/etc/nginx/sites-enabled/
+  └── web-dashboard -> ../sites-available/web-dashboard
+```
+
+**Package Metadata**:
+
+- Package name: `web-dashboard`
+- Dependencies: `nginx`
+- Service port: 80 (default HTTP) or 443 (HTTPS)
+- Default URL: `http://localhost/` or configured domain
+
+#### Packaging Tool & Process
+
+**Tool**: `dpkg-deb` (native Debian package builder)
+
+**Package Creation Process**:
+
+1. Create DEBIAN control directory with metadata files:
+   - `control`: Package metadata (name, version, dependencies, description)
+   - `postinst`: Post-installation script (start services, configure nginx)
+   - `prerm`: Pre-removal script (stop services)
+   - `postrm`: Post-removal script (cleanup)
+
+2. Backend package build:
+   - Compile TypeScript to standalone executable using `pkg`
+   - Create directory structure with executable and config files
+   - Create DEBIAN control files
+   - Build package: `dpkg-deb --build api-server`
+
+3. Frontend package build:
+   - Run Vite production build
+   - Copy built assets to package directory structure
+   - Include nginx configuration files
+   - Create DEBIAN control files
+   - Build package: `dpkg-deb --build web-dashboard`
+
+**Deliverables**:
+
+- `api-server_1.0.0_amd64.deb` - Backend service package
+- `web-dashboard_1.0.0_all.deb` - Frontend web application package
+
+### Deployment Requirements
+
+**DR-001**: Backend package MUST install as a systemd service that starts automatically on system boot
+
+**DR-002**: Backend service MUST be controllable via standard systemd commands (`systemctl start/stop/restart api-server`)
+
+**DR-003**: Frontend package MUST automatically configure nginx to serve the dashboard
+
+**DR-004**: Frontend package MUST enable the nginx site configuration during installation
+
+**DR-005**: Both packages MUST include post-installation scripts that verify service health
+
+**DR-006**: Packages MUST support clean uninstallation without leaving orphaned files or configurations
+
+**DR-007**: Backend executable MUST be architecture-specific (amd64) and self-contained
+
+**DR-008**: Frontend package MUST be architecture-independent (all) as it contains only static files
+
+**DR-009**: Installation MUST NOT require internet connectivity (all dependencies bundled)
+
+**DR-010**: Packages MUST follow Debian package naming conventions and include proper metadata
+
+### Installation Flow
+
+**Backend Installation**:
+
+```bash
+sudo dpkg -i api-server_1.0.0_amd64.deb
+# - Installs executable to /opt/api-server/bin/
+# - Creates systemd service
+# - Creates log directory with proper permissions
+# - Starts service automatically
+# - Service listens on port 3000
+```
+
+**Frontend Installation**:
+
+```bash
+sudo dpkg -i web-dashboard_1.0.0_all.deb
+# - Installs static files to /var/www/web-dashboard/
+# - Configures nginx site
+# - Enables site configuration
+# - Reloads nginx
+# - Dashboard accessible at http://localhost/
+```
+
+### Success Criteria for Packaging
+
+- **PC-001**: Backend package installs successfully on clean Ubuntu 20.04+ or Debian 11+ system
+- **PC-002**: Backend service starts automatically after installation and survives system reboot
+- **PC-003**: Frontend package installs successfully and nginx serves dashboard without manual intervention
+- **PC-004**: Both packages can be cleanly removed with `dpkg -r` without leaving artifacts
+- **PC-005**: Backend binary runs without requiring Node.js installation on target system
+- **PC-006**: Frontend package correctly proxies API requests to backend service
+- **PC-007**: Installation process completes in under 30 seconds for both packages combined
+- **PC-008**: Packages include proper version information and dependency declarations
+
