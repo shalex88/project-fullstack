@@ -1,8 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import Player, { PlayerRef } from '../components/Player';
-import Controls from '../components/Controls';
-import Settings from '../components/Settings';
-import Status from '../components/Status';
+import Sidebar from '../components/Sidebar';
 import { getStreamUrl, getZoom, setZoom, getFocus, setFocus, setAutofocus, getCameraInfo, setStabilization } from '../services/api';
 
 export default function Dashboard() {
@@ -116,14 +114,8 @@ export default function Dashboard() {
   };
 
   return (
-    <div style={{ padding: 24, maxWidth: 1200, margin: '0 auto' }}>
-      <h1>Camera Control Dashboard</h1>
-
-      <Status connected={connected} message={statusMessage} />
-
-      <Player ref={playerRef} streamUrl={streamUrl} isPlaying={isPlaying} />
-
-      <Controls
+    <div className="dashboard">
+      <Sidebar
         isPlaying={isPlaying}
         onTogglePlay={handleTogglePlay}
         onSnapshot={handleSnapshot}
@@ -135,15 +127,18 @@ export default function Dashboard() {
         onFocusOut={handleFocusOut}
         autofocus={autofocus}
         onToggleAutofocus={handleToggleAutofocus}
+        stabilization={stabilization}
+        onToggleStabilization={handleToggleStabilization}
+        connected={connected}
+        statusMessage={statusMessage}
+        cameraInfo={cameraInfo}
       />
 
-      <Settings
-        info={cameraInfo}
-        autofocus={autofocus}
-        stabilization={stabilization}
-        onToggleAutofocus={handleToggleAutofocus}
-        onToggleStabilization={handleToggleStabilization}
-      />
+      <main className="main-content">
+        <div className="video-container">
+          <Player ref={playerRef} streamUrl={streamUrl} isPlaying={isPlaying} />
+        </div>
+      </main>
     </div>
   );
 }
