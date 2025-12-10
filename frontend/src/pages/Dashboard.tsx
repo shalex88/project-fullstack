@@ -1,25 +1,37 @@
 import { useEffect, useState, useRef } from 'react';
 import Player, { PlayerRef } from '../components/Player';
 import Sidebar from '../components/Sidebar';
-import { getStreamUrl, getZoom, setZoom, getFocus, setFocus, setAutofocus, getCameraInfo, setStabilization, detectCameraCapabilities, CameraCapabilities } from '../services/api';
+import { ToastContainer, ToastMessage } from '../components/Toast';
+import { getStreamUrl, getZoom, setZoom, getFocus, setFocus, setAutofocus, getCameraInfo, setStabilization, detectCameraCapabilities, CameraCapabilities, isServerReachable } from '../services/api';
 
 export default function Dashboard() {
   const [streamUrl, setStreamUrl] = useState<string>('');
   const [isPlaying, setIsPlaying] = useState(false);
   const [zoom, setZoomState] = useState(0);
+  const [zoomInput, setZoomInput] = useState<string>('0');
   const [focus, setFocusState] = useState(0);
+  const [focusInput, setFocusInput] = useState<string>('0');
   const [autofocus, setAutofocusState] = useState(true); // default per simulator behavior
   const [stabilization, setStabilizationState] = useState(false);
   const [cameraInfo, setCameraInfo] = useState<string>('');
   const [connected, setConnected] = useState(false);
-  const [statusMessage, setStatusMessage] = useState<string>('');
   const [capabilities, setCapabilities] = useState<CameraCapabilities>({
     zoom: true,
     focus: true,
     autofocus: true,
     stabilization: true,
   });
+  const [toasts, setToasts] = useState<ToastMessage[]>([]);
   const playerRef = useRef<PlayerRef>(null);
+
+  const showToast = (message: string, type: ToastMessage['type'] = 'info') => {
+    const id = Date.now().toString();
+    setToasts((prev) => [...prev, { id, message, type }]);
+  };
+
+  const removeToast = (id: string) => {
+    setToasts((prev) => prev.filter((toast) => toast.id !== id));
+  };
 
   useEffect(() => {
     const initCamera = async () => {
@@ -27,27 +39,29 @@ export default function Dashboard() {
         // First detect what features are available
         const caps = await detectCameraCapabilities();
         setCapabilities(caps);
-
-        const [url, currentZoom, info] = await Promise.all([
-          getStreamUrl(),
-          caps.zoom ? getZoom() : Promise.resolve(0),
-          getCameraInfo()
-        ]);
+        const url = await getStreamUrl();
         setStreamUrl(url);
+
+        const currentZoom = caps.zoom ? await getZoom() : 0;
         setZoomState(currentZoom);
+        setZoomInput(currentZoom.toString());
+
+        const info = await getCameraInfo();
         setCameraInfo(info);
         setConnected(true);
-        setStatusMessage('Camera ready');
       } catch (err) {
         console.error('Init failed:', err);
-        setConnected(false);
-        setStatusMessage('Failed to connect to camera service');
+        const reachable = await isServerReachable();
+        setConnected(reachable);
       }
     };
 
     initCamera();
     // Focus GET may fail while autofocus is on; ignore initial errors
-    getFocus().then(setFocusState).catch(() => {});
+    getFocus().then((f) => {
+      setFocusState(f);
+      setFocusInput(f.toString());
+    }).catch(() => {});
   }, []);
 
   const handleTogglePlay = () => setIsPlaying((prev) => !prev);
@@ -60,8 +74,11 @@ export default function Dashboard() {
     try {
       const newZoom = await setZoom(zoom + 5);
       setZoomState(newZoom);
+      setZoomInput(newZoom.toString());
     } catch (err) {
       console.error('Zoom failed:', err);
+      const reachable = await isServerReachable();
+      if (!reachable) setConnected(false);
     }
   };
 
@@ -69,8 +86,37 @@ export default function Dashboard() {
     try {
       const newZoom = await setZoom(Math.max(0, zoom - 5));
       setZoomState(newZoom);
+      setZoomInput(newZoom.toString());
     } catch (err) {
       console.error('Zoom failed:', err);
+      const reachable = await isServerReachable();
+      if (!reachable) setConnected(false);
+    }
+  };
+
+  const handleZoomInputChange = (value: string) => {
+    setZoomInput(value);
+  };
+
+  const handleGoToZoom = async () => {
+    try {
+      const targetZoom = parseInt(zoomInput, 10);
+      if (isNaN(targetZoom)) {
+        showToast('Invalid zoom value', 'error');
+        return;
+      }
+      if (targetZoom < 0 || targetZoom > 100) {
+        showToast('Zoom value must be between 0 and 100', 'warning');
+        return;
+      }
+      const newZoom = await setZoom(targetZoom);
+      setZoomState(newZoom);
+      setZoomInput(newZoom.toString());
+    } catch (err) {
+      console.error('Go to zoom failed:', err);
+      showToast('Failed to set zoom', 'error');
+      const reachable = await isServerReachable();
+      if (!reachable) setConnected(false);
     }
   };
 
@@ -83,12 +129,13 @@ export default function Dashboard() {
         // When disabling autofocus, fetch current manual focus
         const current = await getFocus();
         setFocusState(current);
+        setFocusInput(current.toString());
       }
-      setConnected(true);
     } catch (err) {
       console.error('Autofocus toggle failed:', err);
-      setConnected(false);
-      setStatusMessage('Failed to toggle autofocus');
+      showToast('Failed to toggle autofocus', 'error');
+      const reachable = await isServerReachable();
+      if (!reachable) setConnected(false);
     }
   };
 
@@ -97,11 +144,11 @@ export default function Dashboard() {
       const enabled = !stabilization;
       await setStabilization(enabled);
       setStabilizationState(enabled);
-      setConnected(true);
     } catch (err) {
       console.error('Stabilization toggle failed:', err);
-      setConnected(false);
-      setStatusMessage('Failed to toggle stabilization');
+      showToast('Failed to toggle stabilization', 'error');
+      const reachable = await isServerReachable();
+      if (!reachable) setConnected(false);
     }
   };
 
@@ -109,8 +156,11 @@ export default function Dashboard() {
     try {
       const newFocus = await setFocus(focus + 5);
       setFocusState(newFocus);
+      setFocusInput(newFocus.toString());
     } catch (err) {
       console.error('Focus failed:', err);
+      const reachable = await isServerReachable();
+      if (!reachable) setConnected(false);
     }
   };
 
@@ -118,21 +168,57 @@ export default function Dashboard() {
     try {
       const newFocus = await setFocus(Math.max(0, focus - 5));
       setFocusState(newFocus);
+      setFocusInput(newFocus.toString());
     } catch (err) {
       console.error('Focus failed:', err);
+      const reachable = await isServerReachable();
+      if (!reachable) setConnected(false);
+    }
+  };
+
+  const handleFocusInputChange = (value: string) => {
+    setFocusInput(value);
+  };
+
+  const handleGoToFocus = async () => {
+    try {
+      const targetFocus = parseInt(focusInput, 10);
+      if (isNaN(targetFocus)) {
+        showToast('Invalid focus value', 'error');
+        return;
+      }
+      if (targetFocus < 0 || targetFocus > 100) {
+        showToast('Focus value must be between 0 and 100', 'warning');
+        return;
+      }
+      const newFocus = await setFocus(targetFocus);
+      setFocusState(newFocus);
+      setFocusInput(newFocus.toString());
+    } catch (err) {
+      console.error('Go to focus failed:', err);
+      showToast('Failed to set focus', 'error');
+      const reachable = await isServerReachable();
+      if (!reachable) setConnected(false);
     }
   };
 
   return (
     <div className="dashboard">
+      <ToastContainer toasts={toasts} onClose={removeToast} />
       <Sidebar
         isPlaying={isPlaying}
         onTogglePlay={handleTogglePlay}
         onSnapshot={handleSnapshot}
         zoom={zoom}
+        zoomInput={zoomInput}
+        onZoomInputChange={handleZoomInputChange}
+        onGoToZoom={handleGoToZoom}
         onZoomIn={handleZoomIn}
         onZoomOut={handleZoomOut}
         focus={focus}
+        focusInput={focusInput}
+        onFocusInputChange={handleFocusInputChange}
+        onGoToFocus={handleGoToFocus}
         onFocusIn={handleFocusIn}
         onFocusOut={handleFocusOut}
         autofocus={autofocus}
@@ -140,7 +226,6 @@ export default function Dashboard() {
         stabilization={stabilization}
         onToggleStabilization={handleToggleStabilization}
         connected={connected}
-        statusMessage={statusMessage}
         cameraInfo={cameraInfo}
         capabilities={capabilities}
       />

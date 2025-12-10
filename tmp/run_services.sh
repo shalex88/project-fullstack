@@ -3,7 +3,7 @@
 # Run the system for e2e tests
 # Starts 1 camera video streams at rtsp://localhost:8554/camera1
 # Starts 1 camera services at grpc://localhost:50051
-
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Cleanup function to kill all background processes
 cleanup() {
@@ -12,23 +12,24 @@ cleanup() {
         kill $MTX_PID 2>/dev/null
         echo "Stopped MediaMTX (PID $MTX_PID)"
     fi
-    for pid in "${CAMERA_PIDS[@]}"; do
-        kill $pid 2>/dev/null
-    done
-    echo "Stopped Camera Services (PIDs ${CAMERA_PIDS[*]})"
+    if [ ! -z "$VP_PID" ]; then
+        kill $VP_PID 2>/dev/null
+        echo "Stopped VideoPlayer (PID $VP_PID)"
+    fi
     exit 0
 }
 
 # Trap EXIT, SIGINT, and SIGTERM to run cleanup
 trap cleanup EXIT INT TERM
 
-./mediamtx/mediamtx ./mediamtx/mediamtx.yml &
+"$SCRIPT_DIR/media-server/mediamtx" "$SCRIPT_DIR/media-server/mediamtx.yml" &
 MTX_PID=$!
 echo "Started MediaMTX with PID $MTX_PID"
 
-./camera-service/camera-service --config ./camera-service/camera1.yaml &
-CAMERA_PIDS=($!)
-echo "Started Camera Services gRPC (with reflection) with PIDs ${CAMERA_PIDS[*]}"
+cd "$SCRIPT_DIR/../../video-player"
+./video-player -c config/config.yaml &
+VP_PID=$!
+echo "Started VideoPlayer with PID $VP_PID"
 
 # Wait for all background processes
 wait

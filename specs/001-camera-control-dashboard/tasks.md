@@ -73,6 +73,9 @@ description: "Task list for Camera Control Dashboard & ApiServer"
 - [x] T019 [US1] Add frontend API client in `frontend/src/services/api.ts` (stream URL, zoom get/set)
 - [x] T020 [US1] Add accessibility (keyboard shortcuts, focus styles) in `frontend/src/components/Controls.tsx`
 - [x] T021 [US1] Add backend logging for control actions in `backend/src/lib/log.ts` and integrate
+- [T1] [P] US1 Implement video playback in WebDashboard, integrating with MediaMTX.
+- [T2] [P] US1 Add zoom controls in WebDashboard.
+- [T3] [P] US1 Implement toast notifications for user feedback on actions.
 
 **Checkpoint**: At this point, User Story 1 should be fully functional and testable independently
 
@@ -93,6 +96,7 @@ description: "Task list for Camera Control Dashboard & ApiServer"
 
 - [x] T024 [US2] Implement Snapshot button drawing from `<video>` to `<canvas>` and downloading in `frontend/src/components/Controls.tsx`
 - [x] T025 [US2] Add UI state and error handling for snapshot in `frontend/src/components/Controls.tsx`
+- [T4] [P] US2 Implement snapshot functionality in WebDashboard.
 
 **Checkpoint**: At this point, User Stories 1 AND 2 should both work independently
 
@@ -114,6 +118,7 @@ description: "Task list for Camera Control Dashboard & ApiServer"
 - [x] T028 [P] [US3] Implement routes in `backend/src/api/camera.ts` (info, autofocus enable, stabilization enable) mapping to gRPC
 - [x] T029 [US3] Implement Settings panel in `frontend/src/components/Settings.tsx` (info display, toggles)
 - [x] T030 [US3] Implement status area in `frontend/src/components/Status.tsx` and integrate into `Dashboard.tsx`
+- [T5] [P] US3 Integrate camera settings and status display in WebDashboard.
 
 **Checkpoint**: All user stories should now be independently functional
 

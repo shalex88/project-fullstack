@@ -98,8 +98,8 @@ An operator can view and modify camera settings (e.g., resolution, frame rate, f
 - **FR-006**: For MVP, the system operates without authentication; access is expected to be restricted to a trusted/local environment. A follow-up iteration will add authentication and roles.
 - **FR-007**: System MUST support controlling a single camera (no multi-camera selection in MVP).
 - **FR-008**: System will not persist operator preferences in MVP; settings reset each session.
-- **FR-009**: System MUST log control actions (who did what and when) for auditability without exposing implementation details to users.
-- **FR-010**: System MUST provide accessible controls (keyboard-operable, visible focus, sufficient contrast) and user-friendly messages.
+- **FR-009**: WebDashboard MUST show toast notifications for user feedback on actions (success, error, warnings).
+- **FR-010**: ApiServer MUST integrate with the video service for playback control and status updates.
 
 ### Key Entities *(include if feature involves data)*
 

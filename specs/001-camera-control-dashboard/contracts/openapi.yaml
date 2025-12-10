@@ -96,6 +96,17 @@ paths:
                 properties:
                   focus:
                     type: integer
+        '503':
+          description: Focus unavailable (e.g., autofocus is enabled)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
     post:
       summary: Set focus
       requestBody:
@@ -118,6 +129,17 @@ paths:
                 properties:
                   focus:
                     type: integer
+        '503':
+          description: Focus unavailable (e.g., autofocus is enabled)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
   /api/camera/autofocus:
     post:
       summary: Enable/disable autofocus
@@ -143,7 +165,8 @@ paths:
                     type: boolean
   /api/camera/stabilization:
     post:
-      summary: Enable/disable stabilization
+      summary: Enable/disable camera stabilization (legacy endpoint)
+      description: Note - stabilization is now handled by the video service at /api/video/stabilization
       requestBody:
         required: true
         content:
@@ -164,5 +187,40 @@ paths:
                 properties:
                   enable:
                     type: boolean
+  /api/video/stabilization:
+    post:
+      summary: Enable/disable video stabilization
+      description: Controls video stabilization via gRPC video service (EnableOptionalElement/DisableOptionalElement with element="myf2f")
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                enable:
+                  type: boolean
+              required: [enable]
+      responses:
+        '200':
+          description: Video stabilization set
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  enable:
+                    type: boolean
+        '503':
+          description: Service unavailable or not implemented
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
 components:
   schemas: {}

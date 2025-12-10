@@ -64,18 +64,18 @@ export function registerCameraRoutes(app: FastifyInstance) {
   app.post('/api/camera/autofocus', async (req: any) => {
     const body = ToggleSchema.parse((req as any).body);
     await new Promise((resolve, reject) =>
-      client.EnableAutoFocus({ enable: body.enable }, (err: any) => (err ? reject(err) : resolve(null)))
+      client.SetAutoFocus({ enable: body.enable }, (err: any) => (err ? reject(err) : resolve(null)))
     );
-    logger.info('EnableAutoFocus', { enable: body.enable });
+    logger.info('SetAutoFocus', { enable: body.enable });
     return { enable: body.enable };
   });
 
   app.post('/api/camera/stabilization', async (req: any) => {
     const body = ToggleSchema.parse((req as any).body);
     await new Promise((resolve, reject) =>
-      client.Stabilize({ enable: body.enable }, (err: any) => (err ? reject(err) : resolve(null)))
+      client.SetStabilization({ enable: body.enable }, (err: any) => (err ? reject(err) : resolve(null)))
     );
-    logger.info('Stabilize', { enable: body.enable });
+    logger.info('SetStabilization', { enable: body.enable });
     return { enable: body.enable };
   });
 }

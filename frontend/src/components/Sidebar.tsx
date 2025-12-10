@@ -10,7 +10,8 @@ import {
   Shield,
   Info,
   Wifi,
-  WifiOff
+  WifiOff,
+  MoveRight
 } from 'lucide-react';
 import { CameraCapabilities } from '../services/api';
 
@@ -18,9 +19,15 @@ interface SidebarProps {
   isPlaying: boolean;
   onTogglePlay: () => void;
   zoom: number;
+  zoomInput: string;
+  onZoomInputChange: (value: string) => void;
+  onGoToZoom: () => void;
   onZoomIn: () => void;
   onZoomOut: () => void;
   focus: number;
+  focusInput: string;
+  onFocusInputChange: (value: string) => void;
+  onGoToFocus: () => void;
   onFocusIn: () => void;
   onFocusOut: () => void;
   autofocus: boolean;
@@ -29,7 +36,6 @@ interface SidebarProps {
   onToggleStabilization: () => void;
   onSnapshot?: () => void;
   connected: boolean;
-  statusMessage: string;
   cameraInfo: string;
   capabilities: CameraCapabilities;
 }
@@ -38,9 +44,15 @@ export default function Sidebar({
   isPlaying,
   onTogglePlay,
   zoom,
+  zoomInput,
+  onZoomInputChange,
+  onGoToZoom,
   onZoomIn,
   onZoomOut,
   focus,
+  focusInput,
+  onFocusInputChange,
+  onGoToFocus,
   onFocusIn,
   onFocusOut,
   autofocus,
@@ -49,7 +61,6 @@ export default function Sidebar({
   onToggleStabilization,
   onSnapshot,
   connected,
-  statusMessage,
   cameraInfo,
   capabilities
 }: SidebarProps) {
@@ -125,9 +136,6 @@ export default function Sidebar({
         {connected ? <Wifi size={16} /> : <WifiOff size={16} />}
         <span>{connected ? 'Connected' : 'Disconnected'}</span>
       </div>
-      {statusMessage && (
-        <div className="status-message">{statusMessage}</div>
-      )}
 
       {/* Camera Info */}
       <div className="control-section camera-info">
@@ -174,8 +182,22 @@ export default function Sidebar({
             <ZoomIn size={18} />
             Zoom
           </h3>
-          <div className="value-display">
-            <span className="value">{zoom}</span>
+          <div className="value-input-wrapper">
+            <input
+              type="number"
+              value={zoomInput}
+              onChange={(e) => onZoomInputChange(e.target.value)}
+              className="value-input"
+              aria-label="Zoom value"
+            />
+            <button
+              onClick={onGoToZoom}
+              className="control-button secondary goto-button"
+              aria-label="Go to zoom value"
+            >
+              <MoveRight size={18} />
+              <span>Go To</span>
+            </button>
           </div>
           <div className="button-group">
             <button
@@ -224,8 +246,22 @@ export default function Sidebar({
 
           {(!capabilities.autofocus || !autofocus) && (
             <>
-              <div className="value-display">
-                <span className="value">{focus}</span>
+              <div className="value-input-wrapper">
+                <input
+                  type="number"
+                  value={focusInput}
+                  onChange={(e) => onFocusInputChange(e.target.value)}
+                  className="value-input"
+                  aria-label="Focus value"
+                />
+                <button
+                  onClick={onGoToFocus}
+                  className="control-button secondary goto-button"
+                  aria-label="Go to focus value"
+                >
+                  <MoveRight size={18} />
+                  <span>Go To</span>
+                </button>
               </div>
               <div className="button-group">
                 <button

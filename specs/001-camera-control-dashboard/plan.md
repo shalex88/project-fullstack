@@ -20,14 +20,14 @@ Deliver a fullstack TypeScript solution where the WebDashboard plays an HLS stre
 **Language/Version**: TypeScript (Node.js 20.x), React + TypeScript
 **Primary Dependencies**: Backend: Fastify, @grpc/grpc-js, ts-proto, zod; Frontend: Vite, React, hls.js
 **Storage**: N/A (no persistence in MVP)
-**Testing**: Backend: Jest + ts-jest, supertest; Frontend: Vitest + Testing Library; e2e optional: Playwright; Contract: generated TS client against local camera-service
+**Testing**: Backend: Jest + ts-jest, supertest; Frontend: Vitest + Testing Library; e2e optional: Playwright; Contract: generated TS client against local camera-service and video-service
 **Target Platform**: Linux server (backend), modern browsers (frontend)
 **Project Type**: web (frontend + backend)
 **Performance Goals**: Stream start visible ≤ 2s p95; control actions (zoom/focus) visible effect ≤ 300ms p95; backend API latency p95 < 300ms, p99 < 1s
 **Constraints**: Single camera; no auth in MVP; HLS via MediaMTX at :8888; <200ms p95 desirable for non-stream API; accessibility basics for UI
 **Scale/Scope**: Single operator/session; local dev usage; future iterations may add multi-camera and auth
 
-Decoupling: ApiServer does not proxy, control, or gate HLS playback; it only mediates camera commands (zoom/focus/info). The frontend fetches HLS directly from MediaMTX and can start/stop playback independently of camera commands.
+Decoupling: ApiServer does not proxy, control, or gate HLS playback; it only mediates camera commands (zoom/focus/info) and video service commands (stabilization). The frontend fetches HLS directly from MediaMTX and can start/stop playback independently of camera/video commands.
 
 ## Constitution Check
 
@@ -64,24 +64,23 @@ specs/[###-feature]/
 backend/
 ├── src/
 │   ├── api/            # Fastify routes (REST facade)
-│   ├── grpc/           # Generated gRPC clients (ts-proto), client factory
-│   ├── services/       # Camera service adapter (maps HTTP→gRPC)
+│   ├── grpc/           # Generated gRPC clients (ts-proto), client factory for camera and video services
 │   └── lib/            # Validation (zod), config, logging
 └── tests/
   ├── unit/
   ├── integration/    # supertest against Fastify app
-  └── contract/       # Calls into local camera-service via generated client
+  └── contract/       # Calls into local camera-service and video-service via generated clients
 
 frontend/
 ├── src/
-│   ├── components/     # Player, Controls, Status
+│   ├── components/     # Player, Controls, Status, Toast
 │   ├── pages/          # Dashboard page
 │   └── services/       # API client wrappers
 └── tests/
   └── unit/
 ```
 
-**Structure Decision**: Web application with separate `backend/` and `frontend/` projects to isolate concerns and testing; backend mediates control to gRPC camera service; frontend plays HLS directly from MediaMTX.
+**Structure Decision**: Web application with separate `backend/` and `frontend/` projects to isolate concerns and testing; backend mediates control to gRPC camera service and video service; frontend plays HLS directly from MediaMTX and displays toast notifications for user feedback.
 
 ## Packaging & Deployment Structure
 
@@ -190,15 +189,16 @@ scripts/
 
 - ✅ Set up Fastify application with TypeScript
 - ✅ Generate gRPC client code from proto using ts-proto
+- ✅ Implement camera service adapter (gRPC client wrapp (camera and video services)
 - ✅ Implement camera service adapter (gRPC client wrapper)
-- ✅ Create REST endpoints: `/api/camera/zoom`, `/api/camera/focus`, `/api/camera/info`, `/api/stream/url`
+- ✅ Implement video service adapter (gRPC client wrapper)
+- ✅ Create REST endpoints: `/api/camera/zoom`, `/api/camera/focus`, `/api/camera/info`, `/api/camera/autofocus`, `/api/camera/stabilization`, `/api/video/stabilization`, `/api/stream/url`
 - ✅ Add validation middleware using zod
 - ✅ Implement error mapping (gRPC → HTTP status codes)
 - ✅ Add logging and health check endpoint
-- ✅ Write unit tests for camera adapter
+- ✅ Write unit tests for camera and video adapters
 - ✅ Write integration tests for API endpoints
-- ✅ Write contract tests against local camera service
-
+- ✅ Write contract tests against local camera service and video
 **Output**: Working backend in `backend/` with passing tests.
 
 ### Phase 3: Frontend Implementation (Completed)
@@ -210,11 +210,12 @@ scripts/
 - ✅ Set up Vite + React + TypeScript project
 - ✅ Implement Player component with hls.js integration
 - ✅ Implement Controls component (Start/Stop, Zoom In/Out, Focus, Snapshot)
-- ✅ Implement Status component (connection state, error messages)
+- ✅ Implement Toast component for user notifications (success, error, warning, info)
 - ✅ Implement Dashboard page layout with modern sidebar UI
-- ✅ Create API service client for backend calls
+- ✅ Create API service client for backend calls (camera and video endpoints)
 - ✅ Add keyboard shortcuts for controls (Space, +/-, F/D, A, S)
 - ✅ Implement feature detection (hide unsupported camera features)
+- ✅ Add error handling and user feedback via toast notificationssupported camera features)
 - ✅ Add error handling and user feedback
 - ✅ Implement accessibility features (ARIA labels, keyboard navigation)
 - ✅ Write unit tests for components

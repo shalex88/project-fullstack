@@ -44,12 +44,11 @@ trap cleanup EXIT INT TERM
 # Proactively clean any stale dev processes using project binaries
 echo "[dev] Cleaning any previous dev processes..."
 pkill -f "$ROOT_DIR/tmp/mediamtx/mediamtx" 2>/dev/null || true
-pkill -f "$ROOT_DIR/tmp/camera-service/camera-service" 2>/dev/null || true
 pkill -f "tsx watch src/api/server.ts" 2>/dev/null || true
 pkill -f "vite.*--host" 2>/dev/null || true
 sleep 0.5
 
-echo "[dev] Starting local media stack (MediaMTX + camera-service)..."
+echo "[dev] Starting local media stack (MediaMTX)..."
 chmod +x "$ROOT_DIR/tmp/run_services.sh" 2>/dev/null || true
 (cd "$ROOT_DIR/tmp" && ./run_services.sh) >"$SERVICES_LOG" 2>&1 &
 SERVICES_PID=$!
@@ -67,7 +66,7 @@ if [[ ! -f .env ]]; then
     cp .env.sample .env
   else
     echo "PORT=3000" > .env
-    echo "CAMERA_GRPC=localhost:50051" >> .env
+    echo "CAMERA_GRPC=frontier-peripheral-ctrl-mpsoc.local:50051" >> .env
     echo "HLS_URL=http://localhost:8888/camera1/index.m3u8" >> .env
   fi
 fi

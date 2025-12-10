@@ -3,6 +3,7 @@ import cors from '@fastify/cors';
 import { CONFIG } from '../lib/config.js';
 import { registerCameraRoutes } from './camera.js';
 import { registerStreamRoutes } from './stream.js';
+import { registerVideoRoutes } from './video.js';
 import { ZodError } from 'zod';
 
 const app = Fastify({ logger: true });
@@ -21,6 +22,7 @@ app.get('/api/health', async () => ({ status: 'ok' }));
 
 registerStreamRoutes(app);
 registerCameraRoutes(app);
+registerVideoRoutes(app);
 
 app
   .listen({ port: CONFIG.port, host: '0.0.0.0' })

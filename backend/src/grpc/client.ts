@@ -21,16 +21,16 @@ export function createCameraClient() {
     oneofs: true,
   });
   const proto = grpc.loadPackageDefinition(packageDefinition) as any;
-  const CameraService = proto.camera.CameraService as any;
-  const client = new CameraService(CONFIG.grpcTarget, grpc.credentials.createInsecure());
+  const CameraService = proto.camera.v1.CameraService as any;
+  const client = new CameraService(CONFIG.cameraTarget, grpc.credentials.createInsecure());
   return client as any as {
     SetZoom: (req: { zoom: number }, cb: (err: grpc.ServiceError | null, res: {}) => void) => void;
     GetZoom: (req: {}, cb: (err: grpc.ServiceError | null, res: { zoom: number }) => void) => void;
     SetFocus: (req: { focus: number }, cb: (err: grpc.ServiceError | null, res: {}) => void) => void;
     GetFocus: (req: {}, cb: (err: grpc.ServiceError | null, res: { focus: number }) => void) => void;
     GetInfo: (req: {}, cb: (err: grpc.ServiceError | null, res: { info: string }) => void) => void;
-    EnableAutoFocus: (req: { enable: boolean }, cb: (err: grpc.ServiceError | null, res: {}) => void) => void;
-    Stabilize: (req: { enable: boolean }, cb: (err: grpc.ServiceError | null, res: {}) => void) => void;
+    SetAutoFocus: (req: { enable: boolean }, cb: (err: grpc.ServiceError | null, res: {}) => void) => void;
+    SetStabilization: (req: { enable: boolean }, cb: (err: grpc.ServiceError | null, res: {}) => void) => void;
     GoToMinZoom: (req: {}, cb: (err: grpc.ServiceError | null, res: {}) => void) => void;
     GoToMaxZoom: (req: {}, cb: (err: grpc.ServiceError | null, res: {}) => void) => void;
   };

@@ -1,5 +1,15 @@
 const API_BASE = 'http://localhost:3000/api';
 
+export async function isServerReachable(): Promise<boolean> {
+  try {
+    // Any HTTP response means the server is reachable; network errors mean it's not
+    await fetch(API_BASE, { method: 'HEAD' });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export async function getStreamUrl(): Promise<string> {
   const res = await fetch(`${API_BASE}/stream/url`);
   if (!res.ok) throw new Error('Failed to fetch stream URL');
@@ -62,7 +72,7 @@ export async function setAutofocus(enable: boolean): Promise<boolean> {
 }
 
 export async function setStabilization(enable: boolean): Promise<boolean> {
-  const res = await fetch(`${API_BASE}/camera/stabilization`, {
+  const res = await fetch(`${API_BASE}/video/stabilization`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ enable }),
