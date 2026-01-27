@@ -22,12 +22,12 @@ cleanup() {
 # Trap EXIT, SIGINT, and SIGTERM to run cleanup
 trap cleanup EXIT INT TERM
 
-"$SCRIPT_DIR/media-server/mediamtx" "$SCRIPT_DIR/media-server/mediamtx.yml" &
+"$SCRIPT_DIR/../../media-server/mediamtx" "$SCRIPT_DIR/../../media-server/mediamtx.yml" &
 MTX_PID=$!
 echo "Started MediaMTX with PID $MTX_PID"
 
 cd "$SCRIPT_DIR/../../video-player"
-./video-player -c config/config.yaml &
+./video-player -c config/config_cam1.yaml &
 VP_PID=$!
 echo "Started VideoPlayer with PID $VP_PID"
 
