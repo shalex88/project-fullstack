@@ -1,0 +1,379 @@
+openapi: 3.1.0
+info:
+  title: Camera Control Backend API
+  version: 0.1.0
+  description: HTTP API for camera control and stream access.
+servers:
+  - url: http://fronti-elsec.local:3000
+paths:
+  /api/health:
+    get:
+      summary: Healthcheck
+      tags: [system]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+  /api/stream/url:
+    get:
+      summary: Get HLS stream URL for the camera
+      tags: [stream]
+      responses:
+        "200":
+          description: Stream URL
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StreamUrl"
+  /api/camera/info:
+    get:
+      summary: Get camera info
+      tags: [camera]
+      responses:
+        "200":
+          description: Info
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CameraInfo"
+        "400": { $ref: "#/components/responses/GrpcError400" }
+        "404": { $ref: "#/components/responses/GrpcError404" }
+        "409": { $ref: "#/components/responses/GrpcError409" }
+        "501": { $ref: "#/components/responses/GrpcError501" }
+        "502": { $ref: "#/components/responses/GrpcError502" }
+        "503": { $ref: "#/components/responses/GrpcError503" }
+  /api/camera/zoom:
+    get:
+      summary: Get current zoom
+      tags: [camera]
+      responses:
+        "200":
+          description: Zoom value
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ZoomValue"
+        "400": { $ref: "#/components/responses/GrpcError400" }
+        "404": { $ref: "#/components/responses/GrpcError404" }
+        "409": { $ref: "#/components/responses/GrpcError409" }
+        "501": { $ref: "#/components/responses/GrpcError501" }
+        "502": { $ref: "#/components/responses/GrpcError502" }
+        "503": { $ref: "#/components/responses/GrpcError503" }
+    post:
+      summary: Set zoom
+      tags: [camera]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ZoomSetRequest"
+      responses:
+        "200":
+          description: Zoom set
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ZoomValue"
+        "400":
+          description: Validation or gRPC invalid argument
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/ValidationError"
+                  - $ref: "#/components/schemas/GrpcError"
+        "404": { $ref: "#/components/responses/GrpcError404" }
+        "409": { $ref: "#/components/responses/GrpcError409" }
+        "501": { $ref: "#/components/responses/GrpcError501" }
+        "502": { $ref: "#/components/responses/GrpcError502" }
+        "503": { $ref: "#/components/responses/GrpcError503" }
+  /api/camera/focus:
+    get:
+      summary: Get current focus
+      tags: [camera]
+      responses:
+        "200":
+          description: Focus value
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FocusValue"
+        "400": { $ref: "#/components/responses/GrpcError400" }
+        "404": { $ref: "#/components/responses/GrpcError404" }
+        "409": { $ref: "#/components/responses/GrpcError409" }
+        "501": { $ref: "#/components/responses/GrpcError501" }
+        "502": { $ref: "#/components/responses/GrpcError502" }
+        "503": { $ref: "#/components/responses/GrpcError503" }
+    post:
+      summary: Set focus
+      tags: [camera]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FocusSetRequest"
+      responses:
+        "200":
+          description: Focus set
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FocusValue"
+        "400":
+          description: Validation or gRPC invalid argument
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/ValidationError"
+                  - $ref: "#/components/schemas/GrpcError"
+        "404": { $ref: "#/components/responses/GrpcError404" }
+        "409": { $ref: "#/components/responses/GrpcError409" }
+        "501": { $ref: "#/components/responses/GrpcError501" }
+        "502": { $ref: "#/components/responses/GrpcError502" }
+        "503": { $ref: "#/components/responses/GrpcError503" }
+  /api/camera/autofocus:
+    post:
+      summary: Enable/disable autofocus
+      tags: [camera]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ToggleRequest"
+      responses:
+        "200":
+          description: Autofocus set
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToggleResponse"
+        "400":
+          description: Validation or gRPC invalid argument
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/ValidationError"
+                  - $ref: "#/components/schemas/GrpcError"
+        "404": { $ref: "#/components/responses/GrpcError404" }
+        "409": { $ref: "#/components/responses/GrpcError409" }
+        "501": { $ref: "#/components/responses/GrpcError501" }
+        "502": { $ref: "#/components/responses/GrpcError502" }
+        "503": { $ref: "#/components/responses/GrpcError503" }
+  /api/camera/stabilization:
+    post:
+      summary: Enable/disable camera stabilization
+      description: Camera stabilization capability.
+      tags: [camera]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ToggleRequest"
+      responses:
+        "200":
+          description: Stabilization set
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToggleResponse"
+        "400":
+          description: Validation or gRPC invalid argument
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/ValidationError"
+                  - $ref: "#/components/schemas/GrpcError"
+        "404": { $ref: "#/components/responses/GrpcError404" }
+        "409": { $ref: "#/components/responses/GrpcError409" }
+        "501": { $ref: "#/components/responses/GrpcError501" }
+        "502": { $ref: "#/components/responses/GrpcError502" }
+        "503": { $ref: "#/components/responses/GrpcError503" }
+  /api/video/stabilization:
+    post:
+      summary: Enable/disable video stabilization
+      description: Controls video stabilization.
+      tags: [video]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ToggleRequest"
+      responses:
+        "200":
+          description: Video stabilization set
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToggleResponse"
+        "400":
+          description: Validation or gRPC invalid argument
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/ValidationError"
+                  - $ref: "#/components/schemas/GrpcError"
+        "404": { $ref: "#/components/responses/GrpcError404" }
+        "409": { $ref: "#/components/responses/GrpcError409" }
+        "501": { $ref: "#/components/responses/GrpcError501" }
+        "502": { $ref: "#/components/responses/GrpcError502" }
+        "503": { $ref: "#/components/responses/GrpcError503" }
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+          example: ok
+      required: [status]
+    StreamUrl:
+      type: object
+      properties:
+        url:
+          type: string
+          format: uri
+          example: http://localhost:8888/camera1/index.m3u8
+      required: [url]
+    CameraInfo:
+      type: object
+      properties:
+        info:
+          type: string
+      required: [info]
+    ZoomValue:
+      type: object
+      properties:
+        zoom:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: Zoom level (0-100)
+          example: 50
+      required: [zoom]
+    FocusValue:
+      type: object
+      properties:
+        focus:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: Focus level (0-100)
+          example: 50
+      required: [focus]
+    ZoomSetRequest:
+      type: object
+      properties:
+        zoom:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: Zoom level (0-100)
+          example: 50
+      required: [zoom]
+    FocusSetRequest:
+      type: object
+      properties:
+        focus:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: Focus level (0-100)
+          example: 50
+      required: [focus]
+    ToggleRequest:
+      type: object
+      properties:
+        enable:
+          type: boolean
+      required: [enable]
+    ToggleResponse:
+      type: object
+      properties:
+        enable:
+          type: boolean
+      required: [enable]
+    GrpcError:
+      type: object
+      properties:
+        error:
+          type: string
+          description: gRPC status name
+          example: UNAVAILABLE
+        message:
+          type: string
+          example: gRPC error
+      required: [error, message]
+    ValidationError:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Validation failed
+        details:
+          type: array
+          items:
+            type: object
+            properties:
+              code:
+                type: string
+              expected:
+                type: string
+              received:
+                type: string
+              path:
+                type: array
+                items:
+                  type: string
+              message:
+                type: string
+            required: [code, path, message]
+      required: [error, details]
+  responses:
+    GrpcError400:
+      description: gRPC invalid argument
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/GrpcError"
+    GrpcError404:
+      description: gRPC not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/GrpcError"
+    GrpcError409:
+      description: gRPC failed precondition
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/GrpcError"
+    GrpcError501:
+      description: gRPC unimplemented
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/GrpcError"
+    GrpcError502:
+      description: gRPC proxy error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/GrpcError"
+    GrpcError503:
+      description: gRPC unavailable
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/GrpcError"
