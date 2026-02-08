@@ -1,4 +1,5 @@
-const API_BASE = 'http://localhost:3000/api';
+const BACKEND_IP = import.meta.env.BACKEND_IP || 'localhost';
+const API_BASE = `http://${BACKEND_IP}:3000/api`;
 
 export async function isServerReachable(): Promise<boolean> {
   try {

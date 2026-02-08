@@ -25,7 +25,7 @@ PACKAGE_DIR="$TEMP_DIR/$PACKAGE_NAME"
 mkdir -p "$PACKAGE_DIR/DEBIAN"
 mkdir -p "$PACKAGE_DIR$INSTALL_ROOT/$PROJECT_NAME"
 
-# Copy files to package directory (exclude scripts directory)
+# Copy files to package directory (exclude scripts directory and node_modules)
 echo "Copying project files..."
 cd "$PROJECT_ROOT"
 for item in *; do
@@ -33,6 +33,11 @@ for item in *; do
         cp -r "$item" "$PACKAGE_DIR$INSTALL_ROOT/$PROJECT_NAME/"
     fi
 done
+
+# Remove node_modules from frontend and backend if they exist
+echo "Removing node_modules directories..."
+rm -rf "$PACKAGE_DIR$INSTALL_ROOT/$PROJECT_NAME/frontend/node_modules"
+rm -rf "$PACKAGE_DIR$INSTALL_ROOT/$PROJECT_NAME/backend/node_modules"
 
 # Create control file
 cat > "$PACKAGE_DIR/DEBIAN/control" <<EOF

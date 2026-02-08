@@ -1,0 +1,134 @@
+syntax = "proto3";
+
+package core.v1;
+
+import "google/protobuf/empty.proto";
+
+service CoreService {
+  // Zoom operations
+  rpc SetZoom (SetZoomRequest) returns (SetZoomResponse) {}
+  rpc GetZoom (GetZoomRequest) returns (GetZoomResponse) {}
+  rpc GoToMinZoom (GoToMinZoomRequest) returns (GoToMinZoomResponse) {}
+  rpc GoToMaxZoom (GoToMaxZoomRequest) returns (GoToMaxZoomResponse) {}
+
+  // Focus operations
+  rpc SetFocus (SetFocusRequest) returns (SetFocusResponse) {}
+  rpc GetFocus (GetFocusRequest) returns (GetFocusResponse) {}
+  rpc SetAutoFocus (SetAutoFocusRequest) returns (google.protobuf.Empty) {}
+
+  // Device info
+  rpc GetInfo (GetInfoRequest) returns (GetInfoResponse) {}
+
+  // Capabilities
+  rpc GetCapabilities (GetCapabilitiesRequest) returns (GetCapabilitiesResponse) {}
+
+  // Advanced operations
+  rpc SetStabilization (SetStabilizationRequest) returns (google.protobuf.Empty) {}
+
+  // Video operations
+  rpc EnableOptionalElement (EnableOptionalElementRequest) returns (EnableOptionalElementResponse) {}
+  rpc DisableOptionalElement (DisableOptionalElementRequest) returns (DisableOptionalElementResponse) {}
+}
+
+// Zoom operations
+message SetZoomRequest {
+  uint32 camera_id = 1; // camera instance ID [0 - 3]
+  uint32 zoom = 2;      // normalized [0 - 100]
+}
+
+message SetZoomResponse {
+}
+
+message GetZoomRequest {
+  uint32 camera_id = 1; // camera instance ID [0 - 3]
+}
+
+message GetZoomResponse {
+  uint32 zoom = 1; // normalized [0 - 100]
+}
+
+message GoToMinZoomRequest {
+  uint32 camera_id = 1; // camera instance ID [0 - 3]
+}
+
+message GoToMinZoomResponse {
+}
+
+message GoToMaxZoomRequest {
+  uint32 camera_id = 1; // camera instance ID [0 - 3]
+}
+
+message GoToMaxZoomResponse {
+}
+
+// Focus operations
+message SetFocusRequest {
+  uint32 camera_id = 1; // camera instance ID [0 - 3]
+  uint32 focus = 2;     // normalized [0 - 100]
+}
+
+message SetFocusResponse {
+}
+
+message GetFocusRequest {
+  uint32 camera_id = 1; // camera instance ID [0 - 3]
+}
+
+message GetFocusResponse {
+  uint32 focus = 1; // normalized [0 - 100]
+}
+
+message SetAutoFocusRequest {
+  uint32 camera_id = 1; // camera instance ID [0 - 3]
+  bool enable = 2;
+}
+
+// Device info
+message GetInfoRequest {
+  uint32 camera_id = 1; // camera instance ID [0 - 3]
+}
+
+message GetInfoResponse {
+  string info = 1;
+}
+
+// Capabilities
+message GetCapabilitiesRequest {
+  uint32 camera_id = 1; // camera instance ID [0 - 3]
+}
+
+message GetCapabilitiesResponse {
+  repeated Capability capabilities = 1;
+}
+
+enum Capability {
+  CAPABILITY_UNSPECIFIED = 0;
+  CAPABILITY_ZOOM = 1;
+  CAPABILITY_FOCUS = 2;
+  CAPABILITY_AUTO_FOCUS = 3;
+  CAPABILITY_INFO = 4;
+  CAPABILITY_STABILIZATION = 5;
+}
+
+// Advanced operations
+message SetStabilizationRequest {
+  uint32 camera_id = 1; // camera instance ID [0 - 3]
+  bool enable = 2;
+}
+
+// Video operations
+message EnableOptionalElementRequest {
+  uint32 camera_id = 1; // camera instance ID [0 - 3]
+  string element = 2;
+}
+
+message EnableOptionalElementResponse {
+}
+
+message DisableOptionalElementRequest {
+  uint32 camera_id = 1; // camera instance ID [0 - 3]
+  string element = 2;
+}
+
+message DisableOptionalElementResponse {
+}

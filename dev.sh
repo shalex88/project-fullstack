@@ -34,7 +34,7 @@ cleanup() {
     kill "${BACKEND_PID}" 2>/dev/null || true
   fi
   if [[ -n "${SERVICES_PID}" ]] && kill -0 "${SERVICES_PID}" 2>/dev/null; then
-    echo "[dev] Stopping media services (PID ${SERVICES_PID})"
+    echo "[dev] Stopping local stack (PID ${SERVICES_PID})"
     kill "${SERVICES_PID}" 2>/dev/null || true
   fi
   echo "[dev] Done."
@@ -48,7 +48,7 @@ pkill -f "tsx watch src/api/server.ts" 2>/dev/null || true
 pkill -f "vite.*--host" 2>/dev/null || true
 sleep 0.5
 
-echo "[dev] Starting local media stack (MediaMTX)..."
+echo "[dev] Starting local stack..."
 chmod +x "$ROOT_DIR/tmp/run_services.sh" 2>/dev/null || true
 (cd "$ROOT_DIR/tmp" && ./run_services.sh) >"$SERVICES_LOG" 2>&1 &
 SERVICES_PID=$!
@@ -60,16 +60,15 @@ if [[ ! -d node_modules ]]; then
   echo "[dev] Installing backend dependencies..."
   npm install
 fi
-if [[ ! -f .env ]]; then
-  echo "[dev] Creating backend .env from sample..."
-  if [[ -f .env.sample ]]; then
-    cp .env.sample .env
-  else
-    echo "PORT=3000" > .env
-    echo "CAMERA_GRPC=frontier-peripheral-ctrl-mpsoc.local:50051" >> .env
-    echo "HLS_URL=http://localhost:8888/camera1/index.m3u8" >> .env
-  fi
-fi
+
+TARGET_IP=fronti-elsec.local
+BACKEND_IP=$(hostname -I | awk '{print $1}')
+
+echo "PORT=3000" > .env
+echo "CAMERA_GRPC=$TARGET_IP:50051" >> .env
+echo "HLS_URL=http://$TARGET_IP:8888/camera1/index.m3u8" >> .env
+echo "BACKEND_IP=$BACKEND_IP" >> .env
+
 port_in_use() {
   local port="$1"
   if command -v ss >/dev/null 2>&1; then
@@ -91,15 +90,19 @@ popd >/dev/null
 if [[ -n "${BACKEND_PID}" ]]; then
   echo "[dev] Backend PID: ${BACKEND_PID} (logs: $BACKEND_LOG)"
 else
-  echo "[dev] Backend assumed running at http://localhost:3000 (existing process)"
+  echo "[dev] Backend assumed running at http://$BACKEND_IP:3000 (existing process)"
 fi
 
 echo "[dev] Preparing frontend..."
 pushd "$ROOT_DIR/frontend" >/dev/null
+
 if [[ ! -d node_modules ]]; then
   echo "[dev] Installing frontend dependencies..."
   npm install
 fi
+
+echo "BACKEND_IP=$BACKEND_IP" > .env
+
 if port_in_use 5173; then
   echo "[dev] Frontend port 5173 already in use; skipping start."
   FRONTEND_PID=""
@@ -113,14 +116,14 @@ popd >/dev/null
 if [[ -n "${FRONTEND_PID}" ]]; then
   echo "[dev] Frontend PID: ${FRONTEND_PID} (logs: $FRONTEND_LOG)"
 else
-  echo "[dev] Frontend assumed running at http://localhost:5173 (existing process)"
+  echo "[dev] Frontend assumed running at http://$BACKEND_IP:5173 (existing process)"
 fi
 
 echo "\n[dev] Ready! Open these URLs:"
-echo "- Backend health:   http://localhost:3000/api/health"
-echo "- Stream URL API:   http://localhost:3000/api/stream/url"
-echo "- Frontend (Vite):  http://localhost:5173"
-echo "- HLS stream (raw): http://localhost:8888/camera1/index.m3u8"
+echo "- Backend health:   http://$BACKEND_IP:3000/api/health"
+echo "- Stream URL API:   http://$BACKEND_IP:3000/api/stream/url"
+echo "- Frontend (Vite):  http://$BACKEND_IP:5173"
+echo "- HLS stream (raw): http://$BACKEND_IP:8888/camera1/index.m3u8"
 
 echo "\n[dev] Tailing logs (Ctrl+C to stop):"
 echo "--- $SERVICES_LOG ---"
