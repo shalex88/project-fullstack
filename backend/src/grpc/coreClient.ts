@@ -1,7 +1,7 @@
 import path from 'node:path';
 import * as grpc from '@grpc/grpc-js';
 import * as protoLoader from '@grpc/proto-loader';
-import { CONFIG } from '../lib/config.js';
+import { CONFIG } from '../lib/config';
 
 // Use path relative to repo root (works for both runtime and test runs from backend/ dir)
 const PROTO_PATH = path.resolve(process.cwd(), '../contracts/core_service.proto');

@@ -1,8 +1,8 @@
 import type { FastifyInstance } from 'fastify';
-import { createCoreClient } from '../grpc/coreClient.js';
-import { ToggleSchema } from '../lib/validation.js';
-import { createLogger } from '../lib/log.js';
-import { mapGrpcError } from '../lib/grpcError.js';
+import { createCoreClient } from '../grpc/coreClient';
+import { ToggleSchema } from '../lib/validation';
+import { createLogger } from '../lib/log';
+import { mapGrpcError } from '../lib/grpcError';
 
 const logger = createLogger('video');
 const CAMERA_ID = 1;
