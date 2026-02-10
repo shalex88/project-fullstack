@@ -32,8 +32,10 @@ interface SidebarProps {
   onFocusOut: () => void;
   autofocus: boolean;
   onToggleAutofocus: () => void;
-  stabilization: boolean;
-  onToggleStabilization: () => void;
+  cameraStabilization: boolean;
+  onToggleCameraStabilization: () => void;
+  videoStabilization: boolean;
+  onToggleVideoStabilization: () => void;
   onSnapshot?: () => void;
   connected: boolean;
   cameraInfo: string;
@@ -57,8 +59,10 @@ export default function Sidebar({
   onFocusOut,
   autofocus,
   onToggleAutofocus,
-  stabilization,
-  onToggleStabilization,
+  cameraStabilization,
+  onToggleCameraStabilization,
+  videoStabilization,
+  onToggleVideoStabilization,
   onSnapshot,
   connected,
   cameraInfo,
@@ -290,7 +294,7 @@ export default function Sidebar({
         </div>
       )}
 
-      {/* Settings */}
+      {/* Camera Stabilization */}
       {capabilities.stabilization && (
         <div className="control-section">
           <h3>
@@ -300,9 +304,32 @@ export default function Sidebar({
           <label className="toggle-switch">
             <input
               type="checkbox"
-              checked={stabilization}
-              onChange={onToggleStabilization}
-              aria-label="Toggle stabilization"
+              checked={cameraStabilization}
+              onChange={onToggleCameraStabilization}
+              aria-label="Toggle camera stabilization"
+            />
+            <span className="slider"></span>
+            <span className="toggle-label">
+              <Shield size={16} />
+              Stabilization
+            </span>
+          </label>
+        </div>
+      )}
+
+      {/* Video Processing */}
+      {capabilities.stabilization && (
+        <div className="control-section">
+          <h3>
+            <Shield size={18} />
+            Video Processing
+          </h3>
+          <label className="toggle-switch">
+            <input
+              type="checkbox"
+              checked={videoStabilization}
+              onChange={onToggleVideoStabilization}
+              aria-label="Toggle video stabilization"
             />
             <span className="slider"></span>
             <span className="toggle-label">

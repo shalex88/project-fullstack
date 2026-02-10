@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import Player, { PlayerRef } from '../components/Player';
 import Sidebar from '../components/Sidebar';
 import { ToastContainer, ToastMessage } from '../components/Toast';
-import { getStreamUrl, getZoom, setZoom, getFocus, setFocus, setAutofocus, getCameraInfo, setStabilization, detectCameraCapabilities, CameraCapabilities, isServerReachable } from '../services/api';
+import { getStreamUrl, getZoom, setZoom, getFocus, setFocus, setAutofocus, getCameraInfo, setCameraStabilization, setVideoStabilization, detectCameraCapabilities, CameraCapabilities, isServerReachable } from '../services/api';
 
 export default function Dashboard() {
   const [streamUrl, setStreamUrl] = useState<string>('');
@@ -12,7 +12,8 @@ export default function Dashboard() {
   const [focus, setFocusState] = useState(0);
   const [focusInput, setFocusInput] = useState<string>('0');
   const [autofocus, setAutofocusState] = useState(true); // default per simulator behavior
-  const [stabilization, setStabilizationState] = useState(false);
+  const [cameraStabilization, setCameraStabilizationState] = useState(false);
+  const [videoStabilization, setVideoStabilizationState] = useState(false);
   const [cameraInfo, setCameraInfo] = useState<string>('');
   const [connected, setConnected] = useState(false);
   const [capabilities, setCapabilities] = useState<CameraCapabilities>({
@@ -39,6 +40,13 @@ export default function Dashboard() {
         // First detect what features are available
         const caps = await detectCameraCapabilities();
         setCapabilities(caps);
+        console.log('Available capabilities:', {
+          zoom: caps.zoom,
+          focus: caps.focus,
+          autofocus: caps.autofocus,
+          stabilization: caps.stabilization,
+        });
+
         const url = await getStreamUrl();
         setStreamUrl(url);
 
@@ -49,10 +57,20 @@ export default function Dashboard() {
         const info = await getCameraInfo();
         setCameraInfo(info);
         setConnected(true);
+
+        showToast(`Camera connected. Available: ${[
+          caps.zoom ? 'Zoom' : null,
+          caps.focus ? 'Focus' : null,
+          caps.autofocus ? 'Autofocus' : null,
+          caps.stabilization ? 'Stabilization' : null,
+        ].filter(Boolean).join(', ')}`, 'info');
       } catch (err) {
         console.error('Init failed:', err);
         const reachable = await isServerReachable();
         setConnected(reachable);
+        if (reachable) {
+          showToast('Camera connected but failed to load capabilities', 'warning');
+        }
       }
     };
 
@@ -139,14 +157,27 @@ export default function Dashboard() {
     }
   };
 
-  const handleToggleStabilization = async () => {
+  const handleToggleCameraStabilization = async () => {
     try {
-      const enabled = !stabilization;
-      await setStabilization(enabled);
-      setStabilizationState(enabled);
+      const enabled = !cameraStabilization;
+      await setCameraStabilization(enabled);
+      setCameraStabilizationState(enabled);
     } catch (err) {
-      console.error('Stabilization toggle failed:', err);
-      showToast('Failed to toggle stabilization', 'error');
+      console.error('Camera stabilization toggle failed:', err);
+      showToast('Failed to toggle camera stabilization', 'error');
+      const reachable = await isServerReachable();
+      if (!reachable) setConnected(false);
+    }
+  };
+
+  const handleToggleVideoStabilization = async () => {
+    try {
+      const enabled = !videoStabilization;
+      await setVideoStabilization(enabled);
+      setVideoStabilizationState(enabled);
+    } catch (err) {
+      console.error('Video stabilization toggle failed:', err);
+      showToast('Failed to toggle video stabilization', 'error');
       const reachable = await isServerReachable();
       if (!reachable) setConnected(false);
     }
@@ -223,8 +254,10 @@ export default function Dashboard() {
         onFocusOut={handleFocusOut}
         autofocus={autofocus}
         onToggleAutofocus={handleToggleAutofocus}
-        stabilization={stabilization}
-        onToggleStabilization={handleToggleStabilization}
+        cameraStabilization={cameraStabilization}
+        onToggleCameraStabilization={handleToggleCameraStabilization}
+        videoStabilization={videoStabilization}
+        onToggleVideoStabilization={handleToggleVideoStabilization}
         connected={connected}
         cameraInfo={cameraInfo}
         capabilities={capabilities}

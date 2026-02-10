@@ -9,7 +9,20 @@ const logger = createLogger('video');
 export function registerVideoRoutes(app: FastifyInstance) {
   const client = createCoreClient();
 
-  app.post('/api/v1/video/:cameraId/stabilization', async (req: any, reply) => {
+  app.get('/api/v1/video/:cameraId/stabilization', async (req, reply) => {
+    try {
+      const params = CameraIdSchema.parse(req.params);
+      // TODO: Add GetOptionalElement RPC when available
+      // For now, return a placeholder or cached state
+      logger.info('GetVideoStabilization (not implemented)', { camera_id: params.cameraId });
+      return { enable: false };
+    } catch (err: any) {
+      const mapped = mapGrpcError(err);
+      return reply.status(mapped.statusCode).send(mapped.body);
+    }
+  });
+
+  app.put('/api/v1/video/:cameraId/stabilization', async (req: any, reply) => {
     try {
       const params = CameraIdSchema.parse(req.params);
       const body = ToggleSchema.parse((req as any).body);

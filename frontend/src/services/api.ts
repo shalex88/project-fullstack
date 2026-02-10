@@ -28,7 +28,7 @@ export async function getZoom(): Promise<number> {
 
 export async function setZoom(zoom: number): Promise<number> {
   const res = await fetch(`${API_BASE}/cameras/${CAMERA_ID}/zoom`, {
-    method: 'POST',
+    method: 'PUT',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ zoom }),
   });
@@ -46,7 +46,7 @@ export async function getFocus(): Promise<number> {
 
 export async function setFocus(focus: number): Promise<number> {
   const res = await fetch(`${API_BASE}/cameras/${CAMERA_ID}/focus`, {
-    method: 'POST',
+    method: 'PUT',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ focus }),
   });
@@ -62,9 +62,16 @@ export async function getCameraInfo(): Promise<string> {
   return data.info;
 }
 
+export async function getCapabilities(): Promise<string[]> {
+  const res = await fetch(`${API_BASE}/cameras/${CAMERA_ID}/capabilities`);
+  if (!res.ok) throw new Error('Failed to fetch capabilities');
+  const data = await res.json();
+  return data.capabilities;
+}
+
 export async function setAutofocus(enable: boolean): Promise<boolean> {
   const res = await fetch(`${API_BASE}/cameras/${CAMERA_ID}/autofocus`, {
-    method: 'POST',
+    method: 'PUT',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ enable }),
   });
@@ -73,13 +80,38 @@ export async function setAutofocus(enable: boolean): Promise<boolean> {
   return data.enable;
 }
 
-export async function setStabilization(enable: boolean): Promise<boolean> {
-  const res = await fetch(`${API_BASE}/video/${CAMERA_ID}/stabilization`, {
-    method: 'POST',
+export async function getCameraStabilization(): Promise<boolean> {
+  const res = await fetch(`${API_BASE}/cameras/${CAMERA_ID}/stabilization`);
+  if (!res.ok) throw new Error('Failed to fetch camera stabilization');
+  const data = await res.json();
+  return data.enable;
+}
+
+export async function setCameraStabilization(enable: boolean): Promise<boolean> {
+  const res = await fetch(`${API_BASE}/cameras/${CAMERA_ID}/stabilization`, {
+    method: 'PUT',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ enable }),
   });
-  if (!res.ok) throw new Error('Failed to set stabilization');
+  if (!res.ok) throw new Error('Failed to set camera stabilization');
+  const data = await res.json();
+  return data.enable;
+}
+
+export async function getVideoStabilization(): Promise<boolean> {
+  const res = await fetch(`${API_BASE}/video/${CAMERA_ID}/stabilization`);
+  if (!res.ok) throw new Error('Failed to fetch video stabilization');
+  const data = await res.json();
+  return data.enable;
+}
+
+export async function setVideoStabilization(enable: boolean): Promise<boolean> {
+  const res = await fetch(`${API_BASE}/video/${CAMERA_ID}/stabilization`, {
+    method: 'PUT',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ enable }),
+  });
+  if (!res.ok) throw new Error('Failed to set video stabilization');
   const data = await res.json();
   return data.enable;
 }
@@ -92,67 +124,29 @@ export interface CameraCapabilities {
 }
 
 export async function detectCameraCapabilities(): Promise<CameraCapabilities> {
-  const capabilities: CameraCapabilities = {
-    zoom: true,
-    focus: true,
-    autofocus: true,
-    stabilization: true,
-  };
-
-  // Test stabilization by trying to set it
   try {
-    const res = await fetch(`${API_BASE}/cameras/${CAMERA_ID}/stabilization`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ enable: false }),
-    });
-    // 500 or 501 means not supported/implemented
-    if (res.status === 500 || res.status === 501) {
-      capabilities.stabilization = false;
-      console.log('Stabilization not supported (status:', res.status, ')');
-    }
-  } catch (err) {
-    console.warn('Failed to detect stabilization capability:', err);
-  }
+    // Fetch capabilities from API
+    const capabilityList = await getCapabilities();
+    const capabilitySet = new Set(capabilityList.map(c => c.toUpperCase()));
 
-  // Test autofocus
-  try {
-    const res = await fetch(`${API_BASE}/cameras/${CAMERA_ID}/autofocus`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ enable: true }),
-    });
-    if (res.status === 500 || res.status === 501) {
-      capabilities.autofocus = false;
-      console.log('Autofocus not supported (status:', res.status, ')');
-    }
-  } catch (err) {
-    console.warn('Failed to detect autofocus capability:', err);
-  }
+    const capabilities: CameraCapabilities = {
+      zoom: capabilitySet.has('ZOOM'),
+      focus: capabilitySet.has('FOCUS'),
+      autofocus: capabilitySet.has('AUTO_FOCUS'),
+      stabilization: capabilitySet.has('STABILIZATION'),
+    };
 
-  // Test focus (GET should succeed if supported)
-  try {
-    const res = await fetch(`${API_BASE}/cameras/${CAMERA_ID}/focus`);
-    if (res.status === 500 || res.status === 501) {
-      capabilities.focus = false;
-      capabilities.autofocus = false;
-      console.log('Focus not supported (status:', res.status, ')');
-    }
+    console.log('Detected capabilities:', capabilities);
+    return capabilities;
   } catch (err) {
-    console.warn('Failed to detect focus capability:', err);
+    console.warn('Failed to detect capabilities, using defaults:', err);
+    // Fallback to defaults if API fails
+    const capabilities: CameraCapabilities = {
+      zoom: true,
+      focus: true,
+      autofocus: true,
+      stabilization: true,
+    };
+    return capabilities;
   }
-
-  // Test zoom
-  try {
-    const res = await fetch(`${API_BASE}/cameras/${CAMERA_ID}/zoom`);
-    if (res.status === 500 || res.status === 501) {
-      capabilities.zoom = false;
-      console.log('Zoom not supported (status:', res.status, ')');
-    }
-  } catch (err) {
-    console.warn('Failed to detect zoom capability:', err);
-  }
-
-  console.log('Detected capabilities:', capabilities);
-  return capabilities;
 }

@@ -93,6 +93,44 @@ paths:
         type: integer
         minimum: 0
         maximum: 4
+  /cameras/{cameraId}/capabilities:
+    get:
+      summary: Get camera capabilities
+      tags:
+      - camera
+      responses:
+        '200':
+          description: Camera capabilities
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Capabilities'
+        '400':
+          $ref: '#/components/responses/ApiError400'
+        '404':
+          $ref: '#/components/responses/ApiError404'
+        '409':
+          $ref: '#/components/responses/ApiError409'
+        '501':
+          $ref: '#/components/responses/ApiError501'
+        '502':
+          $ref: '#/components/responses/ApiError502'
+        '503':
+          $ref: '#/components/responses/ApiError503'
+        '500':
+          $ref: '#/components/responses/ApiError500'
+        default:
+          $ref: '#/components/responses/DefaultError'
+      operationId: getCapabilities
+    parameters:
+    - name: cameraId
+      in: path
+      required: true
+      description: Camera index to target
+      schema:
+        type: integer
+        minimum: 0
+        maximum: 4
   /cameras/{cameraId}/zoom:
     get:
       summary: Get current zoom
@@ -122,7 +160,16 @@ paths:
         default:
           $ref: '#/components/responses/DefaultError'
       operationId: getZoom
-    post:
+    parameters:
+    - name: cameraId
+      in: path
+      required: true
+      description: Camera index to target
+      schema:
+        type: integer
+        minimum: 0
+        maximum: 4
+    put:
       summary: Set zoom
       tags:
       - camera
@@ -156,15 +203,6 @@ paths:
         default:
           $ref: '#/components/responses/DefaultError'
       operationId: setZoom
-    parameters:
-    - name: cameraId
-      in: path
-      required: true
-      description: Camera index to target
-      schema:
-        type: integer
-        minimum: 0
-        maximum: 4
   /cameras/{cameraId}/focus:
     get:
       summary: Get current focus
@@ -194,7 +232,16 @@ paths:
         default:
           $ref: '#/components/responses/DefaultError'
       operationId: getFocus
-    post:
+    parameters:
+    - name: cameraId
+      in: path
+      required: true
+      description: Camera index to target
+      schema:
+        type: integer
+        minimum: 0
+        maximum: 4
+    put:
       summary: Set focus
       tags:
       - camera
@@ -230,6 +277,7 @@ paths:
         '422':
           $ref: '#/components/responses/ApiError422'
       operationId: setFocus
+  /cameras/{cameraId}/autofocus:
     parameters:
     - name: cameraId
       in: path
@@ -239,8 +287,36 @@ paths:
         type: integer
         minimum: 0
         maximum: 4
-  /cameras/{cameraId}/autofocus:
-    post:
+    get:
+      summary: Get autofocus state
+      tags:
+      - camera
+      responses:
+        '200':
+          description: Current state
+          content:
+            application/json:
+              schema: &id002
+                $ref: '#/components/schemas/ToggleState'
+        '400':
+          $ref: '#/components/responses/BadRequest400'
+        '404':
+          $ref: '#/components/responses/ApiError404'
+        '409':
+          $ref: '#/components/responses/ApiError409'
+        '501':
+          $ref: '#/components/responses/ApiError501'
+        '502':
+          $ref: '#/components/responses/ApiError502'
+        '503':
+          $ref: '#/components/responses/ApiError503'
+        '500':
+          $ref: '#/components/responses/ApiError500'
+        default:
+          $ref: '#/components/responses/DefaultError'
+      operationId: getAutofocus
+      description: Returns whether autofocus is currently enabled.
+    put:
       summary: Enable/disable autofocus
       tags:
       - camera
@@ -274,6 +350,7 @@ paths:
         default:
           $ref: '#/components/responses/DefaultError'
       operationId: setAutofocus
+  /cameras/{cameraId}/stabilization:
     parameters:
     - name: cameraId
       in: path
@@ -283,24 +360,18 @@ paths:
         type: integer
         minimum: 0
         maximum: 4
-  /cameras/{cameraId}/stabilization:
-    post:
-      summary: Enable/disable camera stabilization
-      description: Camera stabilization capability.
+    get:
+      summary: Get camera stabilization state
+      description: Returns whether camera-level stabilization is currently enabled.
       tags:
       - camera
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ToggleState'
+      operationId: getCameraStabilization
       responses:
         '200':
-          description: Stabilization set
+          description: Current state
           content:
             application/json:
-              schema:
+              schema: &id001
                 $ref: '#/components/schemas/ToggleState'
         '400':
           $ref: '#/components/responses/BadRequest400'
@@ -318,7 +389,40 @@ paths:
           $ref: '#/components/responses/ApiError500'
         default:
           $ref: '#/components/responses/DefaultError'
+    put:
+      summary: Enable/disable camera stabilization
+      description: Controls camera-level stabilization.
+      tags:
+      - camera
       operationId: setCameraStabilization
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: *id001
+      responses:
+        '200':
+          description: Camera stabilization set
+          content:
+            application/json:
+              schema: *id001
+        '400':
+          $ref: '#/components/responses/BadRequest400'
+        '404':
+          $ref: '#/components/responses/ApiError404'
+        '409':
+          $ref: '#/components/responses/ApiError409'
+        '501':
+          $ref: '#/components/responses/ApiError501'
+        '502':
+          $ref: '#/components/responses/ApiError502'
+        '503':
+          $ref: '#/components/responses/ApiError503'
+        '500':
+          $ref: '#/components/responses/ApiError500'
+        default:
+          $ref: '#/components/responses/DefaultError'
+  /video/{cameraId}/stabilization:
     parameters:
     - name: cameraId
       in: path
@@ -328,8 +432,35 @@ paths:
         type: integer
         minimum: 0
         maximum: 4
-  /video/{cameraId}/stabilization:
-    post:
+    get:
+      summary: Get video stabilization state
+      tags:
+      - video
+      responses:
+        '200':
+          description: Current state
+          content:
+            application/json:
+              schema: *id002
+        '400':
+          $ref: '#/components/responses/BadRequest400'
+        '404':
+          $ref: '#/components/responses/ApiError404'
+        '409':
+          $ref: '#/components/responses/ApiError409'
+        '501':
+          $ref: '#/components/responses/ApiError501'
+        '502':
+          $ref: '#/components/responses/ApiError502'
+        '503':
+          $ref: '#/components/responses/ApiError503'
+        '500':
+          $ref: '#/components/responses/ApiError500'
+        default:
+          $ref: '#/components/responses/DefaultError'
+      operationId: getVideoStabilization
+      description: Returns whether video stabilization is currently enabled.
+    put:
       summary: Enable/disable video stabilization
       description: Controls video stabilization.
       tags:
@@ -364,15 +495,6 @@ paths:
         default:
           $ref: '#/components/responses/DefaultError'
       operationId: setVideoStabilization
-    parameters:
-    - name: cameraId
-      in: path
-      required: true
-      description: Camera index to target
-      schema:
-        type: integer
-        minimum: 0
-        maximum: 4
 components:
   schemas:
     HealthStatus:
@@ -488,6 +610,32 @@ components:
           example: true
       required:
       - enable
+    Capability:
+      type: string
+      description: Supported camera capability.
+      enum:
+      - ZOOM
+      - FOCUS
+      - AUTO_FOCUS
+      - INFO
+      - STABILIZATION
+      example: ZOOM
+    Capabilities:
+      type: object
+      description: List of camera capabilities.
+      properties:
+        capabilities:
+          type: array
+          items:
+            $ref: '#/components/schemas/Capability'
+          description: Array of supported capabilities for the camera.
+          example:
+          - ZOOM
+          - FOCUS
+          - AUTO_FOCUS
+          - STABILIZATION
+      required:
+      - capabilities
   responses:
     ValidationError400:
       description: Request validation failed

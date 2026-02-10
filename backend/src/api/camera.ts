@@ -36,7 +36,7 @@ export function registerCameraRoutes(app: FastifyInstance) {
     }
   });
 
-  app.post('/api/v1/cameras/:cameraId/zoom', async (req: any, reply) => {
+  app.put('/api/v1/cameras/:cameraId/zoom', async (req: any, reply) => {
     try {
       const params = CameraIdSchema.parse(req.params);
       const body = ZoomSetSchema.parse((req as any).body);
@@ -69,7 +69,7 @@ export function registerCameraRoutes(app: FastifyInstance) {
     }
   });
 
-  app.post('/api/v1/cameras/:cameraId/focus', async (req: any, reply) => {
+  app.put('/api/v1/cameras/:cameraId/focus', async (req: any, reply) => {
     try {
       const params = CameraIdSchema.parse(req.params);
       const body = FocusSetSchema.parse((req as any).body);
@@ -102,7 +102,27 @@ export function registerCameraRoutes(app: FastifyInstance) {
     }
   });
 
-  app.post('/api/v1/cameras/:cameraId/autofocus', async (req: any, reply) => {
+  app.get('/api/v1/cameras/:cameraId/capabilities', async (req, reply) => {
+    try {
+      const params = CameraIdSchema.parse(req.params);
+      const res = await withTimeout(
+        new Promise<{ capabilities: string[] }>((resolve, reject) =>
+          client.GetCapabilities({ camera_id: params.cameraId }, (err: any, data: any) => (err ? reject(err) : resolve(data)))
+        )
+      );
+      // Map protobuf enum names (CAPABILITY_ZOOM -> ZOOM)
+      const capabilities = res.capabilities
+        .map(cap => cap.replace(/^CAPABILITY_/, ''))
+        .filter(cap => cap.length > 0);
+      logger.info('GetCapabilities', { camera_id: params.cameraId, capabilities });
+      return { capabilities };
+    } catch (err: any) {
+      const mapped = mapGrpcError(err);
+      return reply.status(mapped.statusCode).send(mapped.body);
+    }
+  });
+
+  app.put('/api/v1/cameras/:cameraId/autofocus', async (req: any, reply) => {
     try {
       const params = CameraIdSchema.parse(req.params);
       const body = ToggleSchema.parse((req as any).body);
@@ -119,7 +139,20 @@ export function registerCameraRoutes(app: FastifyInstance) {
     }
   });
 
-  app.post('/api/v1/cameras/:cameraId/stabilization', async (req: any, reply) => {
+  app.get('/api/v1/cameras/:cameraId/stabilization', async (req, reply) => {
+    try {
+      const params = CameraIdSchema.parse(req.params);
+      // TODO: Add GetStabilization RPC when available
+      // For now, return a placeholder or cached state
+      logger.info('GetCameraStabilization (not implemented)', { camera_id: params.cameraId });
+      return { enable: false };
+    } catch (err: any) {
+      const mapped = mapGrpcError(err);
+      return reply.status(mapped.statusCode).send(mapped.body);
+    }
+  });
+
+  app.put('/api/v1/cameras/:cameraId/stabilization', async (req: any, reply) => {
     try {
       const params = CameraIdSchema.parse(req.params);
       const body = ToggleSchema.parse((req as any).body);
@@ -128,7 +161,7 @@ export function registerCameraRoutes(app: FastifyInstance) {
           client.SetStabilization({ camera_id: params.cameraId, enable: body.enable }, (err: any) => (err ? reject(err) : resolve(null)))
         )
       );
-      logger.info('SetStabilization', { camera_id: params.cameraId, enable: body.enable });
+      logger.info('SetCameraStabilization', { camera_id: params.cameraId, enable: body.enable });
       return { enable: body.enable };
     } catch (err: any) {
       const mapped = mapGrpcError(err);
