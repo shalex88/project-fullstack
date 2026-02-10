@@ -2,233 +2,377 @@ openapi: 3.1.0
 info:
   title: Camera Control Backend API
   version: 0.1.0
-  description: HTTP API for camera control and stream access.
+  description: 'HTTP API for camera control and stream access.
+
+
+    **Base path:** `/api/v1` (included in server URL).
+
+    '
 servers:
-  - url: http://fronti-elsec.local:3000
+- url: http://fronti-elsec.local:3000/api/v1
+  description: API server
 paths:
-  /api/health:
+  /health:
     get:
       summary: Healthcheck
-      tags: [system]
+      tags:
+      - system
       responses:
-        "200":
+        '200':
           description: OK
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/HealthStatus"
-  /api/stream/url:
+                $ref: '#/components/schemas/HealthStatus'
+        '500':
+          $ref: '#/components/responses/ApiError500'
+        default:
+          $ref: '#/components/responses/DefaultError'
+      operationId: getHealth
+  /stream/{cameraId}/url:
     get:
       summary: Get HLS stream URL for the camera
-      tags: [stream]
+      tags:
+      - stream
       responses:
-        "200":
+        '200':
           description: Stream URL
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/StreamUrl"
-  /api/camera/info:
+                $ref: '#/components/schemas/StreamUrl'
+        '500':
+          $ref: '#/components/responses/ApiError500'
+        default:
+          $ref: '#/components/responses/DefaultError'
+      operationId: getStreamUrl
+    parameters:
+    - name: cameraId
+      in: path
+      required: true
+      description: Camera index to target
+      schema:
+        type: integer
+        minimum: 0
+        maximum: 4
+  /cameras/{cameraId}/info:
     get:
       summary: Get camera info
-      tags: [camera]
+      tags:
+      - camera
       responses:
-        "200":
+        '200':
           description: Info
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/CameraInfo"
-        "400": { $ref: "#/components/responses/GrpcError400" }
-        "404": { $ref: "#/components/responses/GrpcError404" }
-        "409": { $ref: "#/components/responses/GrpcError409" }
-        "501": { $ref: "#/components/responses/GrpcError501" }
-        "502": { $ref: "#/components/responses/GrpcError502" }
-        "503": { $ref: "#/components/responses/GrpcError503" }
-  /api/camera/zoom:
+                $ref: '#/components/schemas/CameraInfo'
+        '400':
+          $ref: '#/components/responses/ApiError400'
+        '404':
+          $ref: '#/components/responses/ApiError404'
+        '409':
+          $ref: '#/components/responses/ApiError409'
+        '501':
+          $ref: '#/components/responses/ApiError501'
+        '502':
+          $ref: '#/components/responses/ApiError502'
+        '503':
+          $ref: '#/components/responses/ApiError503'
+        '500':
+          $ref: '#/components/responses/ApiError500'
+        default:
+          $ref: '#/components/responses/DefaultError'
+      operationId: getCameraInfo
+    parameters:
+    - name: cameraId
+      in: path
+      required: true
+      description: Camera index to target
+      schema:
+        type: integer
+        minimum: 0
+        maximum: 4
+  /cameras/{cameraId}/zoom:
     get:
       summary: Get current zoom
-      tags: [camera]
+      tags:
+      - camera
       responses:
-        "200":
+        '200':
           description: Zoom value
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ZoomValue"
-        "400": { $ref: "#/components/responses/GrpcError400" }
-        "404": { $ref: "#/components/responses/GrpcError404" }
-        "409": { $ref: "#/components/responses/GrpcError409" }
-        "501": { $ref: "#/components/responses/GrpcError501" }
-        "502": { $ref: "#/components/responses/GrpcError502" }
-        "503": { $ref: "#/components/responses/GrpcError503" }
+                $ref: '#/components/schemas/Zoom'
+        '400':
+          $ref: '#/components/responses/ApiError400'
+        '404':
+          $ref: '#/components/responses/ApiError404'
+        '409':
+          $ref: '#/components/responses/ApiError409'
+        '501':
+          $ref: '#/components/responses/ApiError501'
+        '502':
+          $ref: '#/components/responses/ApiError502'
+        '503':
+          $ref: '#/components/responses/ApiError503'
+        '500':
+          $ref: '#/components/responses/ApiError500'
+        default:
+          $ref: '#/components/responses/DefaultError'
+      operationId: getZoom
     post:
       summary: Set zoom
-      tags: [camera]
+      tags:
+      - camera
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ZoomSetRequest"
+              $ref: '#/components/schemas/Zoom'
       responses:
-        "200":
+        '200':
           description: Zoom set
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ZoomValue"
-        "400":
-          description: Validation or gRPC invalid argument
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - $ref: "#/components/schemas/ValidationError"
-                  - $ref: "#/components/schemas/GrpcError"
-        "404": { $ref: "#/components/responses/GrpcError404" }
-        "409": { $ref: "#/components/responses/GrpcError409" }
-        "501": { $ref: "#/components/responses/GrpcError501" }
-        "502": { $ref: "#/components/responses/GrpcError502" }
-        "503": { $ref: "#/components/responses/GrpcError503" }
-  /api/camera/focus:
+                $ref: '#/components/schemas/Zoom'
+        '400':
+          $ref: '#/components/responses/BadRequest400'
+        '404':
+          $ref: '#/components/responses/ApiError404'
+        '409':
+          $ref: '#/components/responses/ApiError409'
+        '501':
+          $ref: '#/components/responses/ApiError501'
+        '502':
+          $ref: '#/components/responses/ApiError502'
+        '503':
+          $ref: '#/components/responses/ApiError503'
+        '500':
+          $ref: '#/components/responses/ApiError500'
+        default:
+          $ref: '#/components/responses/DefaultError'
+      operationId: setZoom
+    parameters:
+    - name: cameraId
+      in: path
+      required: true
+      description: Camera index to target
+      schema:
+        type: integer
+        minimum: 0
+        maximum: 4
+  /cameras/{cameraId}/focus:
     get:
       summary: Get current focus
-      tags: [camera]
+      tags:
+      - camera
       responses:
-        "200":
+        '200':
           description: Focus value
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/FocusValue"
-        "400": { $ref: "#/components/responses/GrpcError400" }
-        "404": { $ref: "#/components/responses/GrpcError404" }
-        "409": { $ref: "#/components/responses/GrpcError409" }
-        "501": { $ref: "#/components/responses/GrpcError501" }
-        "502": { $ref: "#/components/responses/GrpcError502" }
-        "503": { $ref: "#/components/responses/GrpcError503" }
+                $ref: '#/components/schemas/Focus'
+        '400':
+          $ref: '#/components/responses/ApiError400'
+        '404':
+          $ref: '#/components/responses/ApiError404'
+        '409':
+          $ref: '#/components/responses/ApiError409'
+        '501':
+          $ref: '#/components/responses/ApiError501'
+        '502':
+          $ref: '#/components/responses/ApiError502'
+        '503':
+          $ref: '#/components/responses/ApiError503'
+        '500':
+          $ref: '#/components/responses/ApiError500'
+        default:
+          $ref: '#/components/responses/DefaultError'
+      operationId: getFocus
     post:
       summary: Set focus
-      tags: [camera]
+      tags:
+      - camera
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/FocusSetRequest"
+              $ref: '#/components/schemas/Focus'
       responses:
-        "200":
+        '200':
           description: Focus set
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/FocusValue"
-        "400":
-          description: Validation or gRPC invalid argument
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - $ref: "#/components/schemas/ValidationError"
-                  - $ref: "#/components/schemas/GrpcError"
-        "404": { $ref: "#/components/responses/GrpcError404" }
-        "409": { $ref: "#/components/responses/GrpcError409" }
-        "501": { $ref: "#/components/responses/GrpcError501" }
-        "502": { $ref: "#/components/responses/GrpcError502" }
-        "503": { $ref: "#/components/responses/GrpcError503" }
-  /api/camera/autofocus:
+                $ref: '#/components/schemas/Focus'
+        '400':
+          $ref: '#/components/responses/BadRequest400'
+        '404':
+          $ref: '#/components/responses/ApiError404'
+        '409':
+          $ref: '#/components/responses/ApiError409'
+        '501':
+          $ref: '#/components/responses/ApiError501'
+        '502':
+          $ref: '#/components/responses/ApiError502'
+        '503':
+          $ref: '#/components/responses/ApiError503'
+        '500':
+          $ref: '#/components/responses/ApiError500'
+        default:
+          $ref: '#/components/responses/DefaultError'
+        '422':
+          $ref: '#/components/responses/ApiError422'
+      operationId: setFocus
+    parameters:
+    - name: cameraId
+      in: path
+      required: true
+      description: Camera index to target
+      schema:
+        type: integer
+        minimum: 0
+        maximum: 4
+  /cameras/{cameraId}/autofocus:
     post:
       summary: Enable/disable autofocus
-      tags: [camera]
+      tags:
+      - camera
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ToggleRequest"
+              $ref: '#/components/schemas/ToggleState'
       responses:
-        "200":
+        '200':
           description: Autofocus set
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ToggleResponse"
-        "400":
-          description: Validation or gRPC invalid argument
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - $ref: "#/components/schemas/ValidationError"
-                  - $ref: "#/components/schemas/GrpcError"
-        "404": { $ref: "#/components/responses/GrpcError404" }
-        "409": { $ref: "#/components/responses/GrpcError409" }
-        "501": { $ref: "#/components/responses/GrpcError501" }
-        "502": { $ref: "#/components/responses/GrpcError502" }
-        "503": { $ref: "#/components/responses/GrpcError503" }
-  /api/camera/stabilization:
+                $ref: '#/components/schemas/ToggleState'
+        '400':
+          $ref: '#/components/responses/BadRequest400'
+        '404':
+          $ref: '#/components/responses/ApiError404'
+        '409':
+          $ref: '#/components/responses/ApiError409'
+        '501':
+          $ref: '#/components/responses/ApiError501'
+        '502':
+          $ref: '#/components/responses/ApiError502'
+        '503':
+          $ref: '#/components/responses/ApiError503'
+        '500':
+          $ref: '#/components/responses/ApiError500'
+        default:
+          $ref: '#/components/responses/DefaultError'
+      operationId: setAutofocus
+    parameters:
+    - name: cameraId
+      in: path
+      required: true
+      description: Camera index to target
+      schema:
+        type: integer
+        minimum: 0
+        maximum: 4
+  /cameras/{cameraId}/stabilization:
     post:
       summary: Enable/disable camera stabilization
       description: Camera stabilization capability.
-      tags: [camera]
+      tags:
+      - camera
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ToggleRequest"
+              $ref: '#/components/schemas/ToggleState'
       responses:
-        "200":
+        '200':
           description: Stabilization set
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ToggleResponse"
-        "400":
-          description: Validation or gRPC invalid argument
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - $ref: "#/components/schemas/ValidationError"
-                  - $ref: "#/components/schemas/GrpcError"
-        "404": { $ref: "#/components/responses/GrpcError404" }
-        "409": { $ref: "#/components/responses/GrpcError409" }
-        "501": { $ref: "#/components/responses/GrpcError501" }
-        "502": { $ref: "#/components/responses/GrpcError502" }
-        "503": { $ref: "#/components/responses/GrpcError503" }
-  /api/video/stabilization:
+                $ref: '#/components/schemas/ToggleState'
+        '400':
+          $ref: '#/components/responses/BadRequest400'
+        '404':
+          $ref: '#/components/responses/ApiError404'
+        '409':
+          $ref: '#/components/responses/ApiError409'
+        '501':
+          $ref: '#/components/responses/ApiError501'
+        '502':
+          $ref: '#/components/responses/ApiError502'
+        '503':
+          $ref: '#/components/responses/ApiError503'
+        '500':
+          $ref: '#/components/responses/ApiError500'
+        default:
+          $ref: '#/components/responses/DefaultError'
+      operationId: setCameraStabilization
+    parameters:
+    - name: cameraId
+      in: path
+      required: true
+      description: Camera index to target
+      schema:
+        type: integer
+        minimum: 0
+        maximum: 4
+  /video/{cameraId}/stabilization:
     post:
       summary: Enable/disable video stabilization
       description: Controls video stabilization.
-      tags: [video]
+      tags:
+      - video
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ToggleRequest"
+              $ref: '#/components/schemas/ToggleState'
       responses:
-        "200":
+        '200':
           description: Video stabilization set
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ToggleResponse"
-        "400":
-          description: Validation or gRPC invalid argument
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - $ref: "#/components/schemas/ValidationError"
-                  - $ref: "#/components/schemas/GrpcError"
-        "404": { $ref: "#/components/responses/GrpcError404" }
-        "409": { $ref: "#/components/responses/GrpcError409" }
-        "501": { $ref: "#/components/responses/GrpcError501" }
-        "502": { $ref: "#/components/responses/GrpcError502" }
-        "503": { $ref: "#/components/responses/GrpcError503" }
+                $ref: '#/components/schemas/ToggleState'
+        '400':
+          $ref: '#/components/responses/BadRequest400'
+        '404':
+          $ref: '#/components/responses/ApiError404'
+        '409':
+          $ref: '#/components/responses/ApiError409'
+        '501':
+          $ref: '#/components/responses/ApiError501'
+        '502':
+          $ref: '#/components/responses/ApiError502'
+        '503':
+          $ref: '#/components/responses/ApiError503'
+        '500':
+          $ref: '#/components/responses/ApiError500'
+        default:
+          $ref: '#/components/responses/DefaultError'
+      operationId: setVideoStabilization
+    parameters:
+    - name: cameraId
+      in: path
+      required: true
+      description: Camera index to target
+      schema:
+        type: integer
+        minimum: 0
+        maximum: 4
 components:
   schemas:
     HealthStatus:
@@ -237,7 +381,10 @@ components:
         status:
           type: string
           example: ok
-      required: [status]
+      required:
+      - status
+      example:
+        status: ok
     StreamUrl:
       type: object
       properties:
@@ -245,76 +392,19 @@ components:
           type: string
           format: uri
           example: http://localhost:8888/camera1/index.m3u8
-      required: [url]
+      required:
+      - url
+      example:
+        url: http://camera.local/hls/stream.m3u8
     CameraInfo:
       type: object
       properties:
         info:
           type: string
-      required: [info]
-    ZoomValue:
-      type: object
-      properties:
-        zoom:
-          type: integer
-          minimum: 0
-          maximum: 100
-          description: Zoom level (0-100)
-          example: 50
-      required: [zoom]
-    FocusValue:
-      type: object
-      properties:
-        focus:
-          type: integer
-          minimum: 0
-          maximum: 100
-          description: Focus level (0-100)
-          example: 50
-      required: [focus]
-    ZoomSetRequest:
-      type: object
-      properties:
-        zoom:
-          type: integer
-          minimum: 0
-          maximum: 100
-          description: Zoom level (0-100)
-          example: 50
-      required: [zoom]
-    FocusSetRequest:
-      type: object
-      properties:
-        focus:
-          type: integer
-          minimum: 0
-          maximum: 100
-          description: Focus level (0-100)
-          example: 50
-      required: [focus]
-    ToggleRequest:
-      type: object
-      properties:
-        enable:
-          type: boolean
-      required: [enable]
-    ToggleResponse:
-      type: object
-      properties:
-        enable:
-          type: boolean
-      required: [enable]
-    GrpcError:
-      type: object
-      properties:
-        error:
-          type: string
-          description: gRPC status name
-          example: UNAVAILABLE
-        message:
-          type: string
-          example: gRPC error
-      required: [error, message]
+      required:
+      - info
+      example:
+        info: 'Camera connected: true, firmware: 1.2.3'
     ValidationError:
       type: object
       properties:
@@ -338,42 +428,149 @@ components:
                   type: string
               message:
                 type: string
-            required: [code, path, message]
-      required: [error, details]
+            required:
+            - code
+            - path
+            - message
+      required:
+      - error
+      - details
+    ApiError:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Machine-readable error code
+          example: AUTOFOCUS_ENABLED
+        message:
+          type: string
+          example: Cannot set focus value while autofocus is enabled
+        traceId:
+          type: string
+          description: Correlation id for support/debugging
+          example: c1f3a2d4e5
+        details:
+          type: object
+          additionalProperties: true
+          description: Optional structured metadata for this error
+      required:
+      - error
+      - message
+    Focus:
+      type: object
+      properties:
+        focus:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: Focus level (0-100).
+          example: 50
+      required:
+      - focus
+    Zoom:
+      type: object
+      properties:
+        zoom:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: Zoom level (0-100).
+          example: 50
+      required:
+      - zoom
+    ToggleState:
+      type: object
+      description: Enable/disable state of a feature.
+      properties:
+        enable:
+          type: boolean
+          description: Whether the feature is enabled.
+          example: true
+      required:
+      - enable
   responses:
-    GrpcError400:
-      description: gRPC invalid argument
+    ValidationError400:
+      description: Request validation failed
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/GrpcError"
-    GrpcError404:
-      description: gRPC not found
+            $ref: '#/components/schemas/ValidationError'
+    BadRequest400:
+      description: 'Bad request: validation error or semantic rejection'
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/GrpcError"
-    GrpcError409:
-      description: gRPC failed precondition
+            anyOf:
+            - $ref: '#/components/schemas/ValidationError'
+            - $ref: '#/components/schemas/ApiError'
+    DefaultError:
+      description: Unexpected error
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/GrpcError"
-    GrpcError501:
-      description: gRPC unimplemented
+            $ref: '#/components/schemas/ApiError'
+    ApiError400:
+      description: Bad request (invalid input)
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/GrpcError"
-    GrpcError502:
-      description: gRPC proxy error
+            $ref: '#/components/schemas/ApiError'
+    ApiError404:
+      description: Resource not found
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/GrpcError"
-    GrpcError503:
-      description: gRPC unavailable
+            $ref: '#/components/schemas/ApiError'
+    ApiError409:
+      description: Conflict with current resource state
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/GrpcError"
+            $ref: '#/components/schemas/ApiError'
+    ApiError422:
+      description: Request understood but cannot be processed due to business rule
+        violation
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+    ApiError500:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+          examples:
+            internal:
+              summary: Unexpected server failure
+              value:
+                code: 13
+                message: internal error
+                details: []
+    ApiError501:
+      description: Not implemented
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+    ApiError502:
+      description: Bad gateway (upstream/proxy error)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+    ApiError503:
+      description: Service unavailable
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+tags:
+- name: system
+  description: System endpoints (health, readiness).
+- name: stream
+  description: Endpoints related to video streaming.
+- name: camera
+  description: Camera control and status.
+- name: video
+  description: Video processing controls.

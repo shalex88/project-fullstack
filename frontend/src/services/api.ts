@@ -1,5 +1,6 @@
 const BACKEND_IP = import.meta.env.BACKEND_IP || 'localhost';
-const API_BASE = `http://${BACKEND_IP}:3000/api`;
+const API_BASE = `http://${BACKEND_IP}:3000/api/v1`;
+const CAMERA_ID = 1; // Assuming a single camera setup for simplicity
 
 export async function isServerReachable(): Promise<boolean> {
   try {
@@ -12,21 +13,21 @@ export async function isServerReachable(): Promise<boolean> {
 }
 
 export async function getStreamUrl(): Promise<string> {
-  const res = await fetch(`${API_BASE}/stream/url`);
+  const res = await fetch(`${API_BASE}/stream/${CAMERA_ID}/url`);
   if (!res.ok) throw new Error('Failed to fetch stream URL');
   const data = await res.json();
   return data.url;
 }
 
 export async function getZoom(): Promise<number> {
-  const res = await fetch(`${API_BASE}/camera/zoom`);
+  const res = await fetch(`${API_BASE}/cameras/${CAMERA_ID}/zoom`);
   if (!res.ok) throw new Error('Failed to fetch zoom');
   const data = await res.json();
   return data.zoom;
 }
 
 export async function setZoom(zoom: number): Promise<number> {
-  const res = await fetch(`${API_BASE}/camera/zoom`, {
+  const res = await fetch(`${API_BASE}/cameras/${CAMERA_ID}/zoom`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ zoom }),
@@ -37,14 +38,14 @@ export async function setZoom(zoom: number): Promise<number> {
 }
 
 export async function getFocus(): Promise<number> {
-  const res = await fetch(`${API_BASE}/camera/focus`);
+  const res = await fetch(`${API_BASE}/cameras/${CAMERA_ID}/focus`);
   if (!res.ok) throw new Error('Failed to fetch focus');
   const data = await res.json();
   return data.focus;
 }
 
 export async function setFocus(focus: number): Promise<number> {
-  const res = await fetch(`${API_BASE}/camera/focus`, {
+  const res = await fetch(`${API_BASE}/cameras/${CAMERA_ID}/focus`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ focus }),
@@ -55,14 +56,14 @@ export async function setFocus(focus: number): Promise<number> {
 }
 
 export async function getCameraInfo(): Promise<string> {
-  const res = await fetch(`${API_BASE}/camera/info`);
+  const res = await fetch(`${API_BASE}/cameras/${CAMERA_ID}/info`);
   if (!res.ok) throw new Error('Failed to fetch camera info');
   const data = await res.json();
   return data.info;
 }
 
 export async function setAutofocus(enable: boolean): Promise<boolean> {
-  const res = await fetch(`${API_BASE}/camera/autofocus`, {
+  const res = await fetch(`${API_BASE}/cameras/${CAMERA_ID}/autofocus`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ enable }),
@@ -73,7 +74,7 @@ export async function setAutofocus(enable: boolean): Promise<boolean> {
 }
 
 export async function setStabilization(enable: boolean): Promise<boolean> {
-  const res = await fetch(`${API_BASE}/video/stabilization`, {
+  const res = await fetch(`${API_BASE}/video/${CAMERA_ID}/stabilization`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ enable }),
@@ -100,7 +101,7 @@ export async function detectCameraCapabilities(): Promise<CameraCapabilities> {
 
   // Test stabilization by trying to set it
   try {
-    const res = await fetch(`${API_BASE}/camera/stabilization`, {
+    const res = await fetch(`${API_BASE}/cameras/${CAMERA_ID}/stabilization`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ enable: false }),
@@ -116,7 +117,7 @@ export async function detectCameraCapabilities(): Promise<CameraCapabilities> {
 
   // Test autofocus
   try {
-    const res = await fetch(`${API_BASE}/camera/autofocus`, {
+    const res = await fetch(`${API_BASE}/cameras/${CAMERA_ID}/autofocus`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ enable: true }),
@@ -131,7 +132,7 @@ export async function detectCameraCapabilities(): Promise<CameraCapabilities> {
 
   // Test focus (GET should succeed if supported)
   try {
-    const res = await fetch(`${API_BASE}/camera/focus`);
+    const res = await fetch(`${API_BASE}/cameras/${CAMERA_ID}/focus`);
     if (res.status === 500 || res.status === 501) {
       capabilities.focus = false;
       capabilities.autofocus = false;
@@ -143,7 +144,7 @@ export async function detectCameraCapabilities(): Promise<CameraCapabilities> {
 
   // Test zoom
   try {
-    const res = await fetch(`${API_BASE}/camera/zoom`);
+    const res = await fetch(`${API_BASE}/cameras/${CAMERA_ID}/zoom`);
     if (res.status === 500 || res.status === 501) {
       capabilities.zoom = false;
       console.log('Zoom not supported (status:', res.status, ')');

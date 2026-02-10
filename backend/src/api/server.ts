@@ -18,7 +18,7 @@ app.setErrorHandler((error, request, reply) => {
   }
 });
 
-app.get('/api/health', async () => ({ status: 'ok' }));
+app.get('/api/v1/health', async () => ({ status: 'ok' }));
 
 registerStreamRoutes(app);
 registerCameraRoutes(app);
