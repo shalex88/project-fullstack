@@ -1,15 +1,15 @@
 import { z } from 'zod';
 
 export const CameraIdSchema = z.object({
-  cameraId: z.coerce.number().int().min(0).max(4),
+  cameraId: z.coerce.number().int().min(0).max(3),
 });
 
 export const ZoomSetSchema = z.object({
-  zoom: z.number().int().nonnegative(),
+  zoom: z.number().int().min(0).max(100),
 });
 
 export const FocusSetSchema = z.object({
-  focus: z.number().int().nonnegative(),
+  focus: z.number().int().min(0).max(100),
 });
 
 export const ToggleSchema = z.object({

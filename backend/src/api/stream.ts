@@ -4,7 +4,7 @@ import { CameraIdSchema } from '../lib/validation.js';
 import { ZodError } from 'zod';
 
 export function registerStreamRoutes(app: FastifyInstance) {
-  app.get('/api/v1/stream/:cameraId/url', async (req, reply) => {
+  app.get('/api/v1/cameras/:cameraId/stream/url', async (req, reply) => {
     try {
       const params = CameraIdSchema.parse(req.params);
       const url = getHlsUrl(params.cameraId);

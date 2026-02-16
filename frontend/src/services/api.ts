@@ -13,7 +13,7 @@ export async function isServerReachable(): Promise<boolean> {
 }
 
 export async function getStreamUrl(): Promise<string> {
-  const res = await fetch(`${API_BASE}/stream/${CAMERA_ID}/url`);
+  const res = await fetch(`${API_BASE}/cameras/${CAMERA_ID}/stream/url`);
   if (!res.ok) throw new Error('Failed to fetch stream URL');
   const data = await res.json();
   return data.url;
@@ -35,6 +35,20 @@ export async function setZoom(zoom: number): Promise<number> {
   if (!res.ok) throw new Error('Failed to set zoom');
   const data = await res.json();
   return data.zoom;
+}
+
+export async function goToMinZoom(): Promise<void> {
+  const res = await fetch(`${API_BASE}/cameras/${CAMERA_ID}/zoom/min`, {
+    method: 'PUT',
+  });
+  if (!res.ok) throw new Error('Failed to set zoom to minimum');
+}
+
+export async function goToMaxZoom(): Promise<void> {
+  const res = await fetch(`${API_BASE}/cameras/${CAMERA_ID}/zoom/max`, {
+    method: 'PUT',
+  });
+  if (!res.ok) throw new Error('Failed to set zoom to maximum');
 }
 
 export async function getFocus(): Promise<number> {
@@ -98,20 +112,29 @@ export async function setCameraStabilization(enable: boolean): Promise<boolean> 
   return data.enable;
 }
 
-export async function getVideoStabilization(): Promise<boolean> {
-  const res = await fetch(`${API_BASE}/video/${CAMERA_ID}/stabilization`);
-  if (!res.ok) throw new Error('Failed to fetch video stabilization');
+export async function getVideoCapabilities(): Promise<string[]> {
+  const res = await fetch(`${API_BASE}/cameras/${CAMERA_ID}/video/capabilities`);
+  if (!res.ok) throw new Error('Failed to fetch video capabilities');
+  const data = await res.json();
+  return data.capabilities;
+}
+
+export async function getVideoCapabilityState(capability: string): Promise<boolean> {
+  const encodedCapability = encodeURIComponent(capability);
+  const res = await fetch(`${API_BASE}/cameras/${CAMERA_ID}/video/capabilities/${encodedCapability}`);
+  if (!res.ok) throw new Error(`Failed to get video capability state: ${capability}`);
   const data = await res.json();
   return data.enable;
 }
 
-export async function setVideoStabilization(enable: boolean): Promise<boolean> {
-  const res = await fetch(`${API_BASE}/video/${CAMERA_ID}/stabilization`, {
+export async function setVideoCapability(capability: string, enable: boolean): Promise<boolean> {
+  const encodedCapability = encodeURIComponent(capability);
+  const res = await fetch(`${API_BASE}/cameras/${CAMERA_ID}/video/capabilities/${encodedCapability}`, {
     method: 'PUT',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ enable }),
   });
-  if (!res.ok) throw new Error('Failed to set video stabilization');
+  if (!res.ok) throw new Error(`Failed to set video capability: ${capability}`);
   const data = await res.json();
   return data.enable;
 }

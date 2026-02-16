@@ -24,6 +24,8 @@ interface SidebarProps {
   onGoToZoom: () => void;
   onZoomIn: () => void;
   onZoomOut: () => void;
+  onGoToMinZoom: () => void;
+  onGoToMaxZoom: () => void;
   focus: number;
   focusInput: string;
   onFocusInputChange: (value: string) => void;
@@ -34,8 +36,9 @@ interface SidebarProps {
   onToggleAutofocus: () => void;
   cameraStabilization: boolean;
   onToggleCameraStabilization: () => void;
-  videoStabilization: boolean;
-  onToggleVideoStabilization: () => void;
+  videoCapabilities: string[];
+  videoCapabilityState: Record<string, boolean>;
+  onToggleVideoCapability: (capability: string) => void;
   onSnapshot?: () => void;
   connected: boolean;
   cameraInfo: string;
@@ -51,6 +54,8 @@ export default function Sidebar({
   onGoToZoom,
   onZoomIn,
   onZoomOut,
+  onGoToMinZoom,
+  onGoToMaxZoom,
   focus,
   focusInput,
   onFocusInputChange,
@@ -61,8 +66,9 @@ export default function Sidebar({
   onToggleAutofocus,
   cameraStabilization,
   onToggleCameraStabilization,
-  videoStabilization,
-  onToggleVideoStabilization,
+  videoCapabilities,
+  videoCapabilityState,
+  onToggleVideoCapability,
   onSnapshot,
   connected,
   cameraInfo,
@@ -221,6 +227,24 @@ export default function Sidebar({
               <kbd>+</kbd>
             </button>
           </div>
+          <div className="button-group">
+            <button
+              onClick={onGoToMinZoom}
+              className="control-button secondary"
+              aria-label="Go to minimum zoom"
+            >
+              <ZoomOut size={18} />
+              <span>Min</span>
+            </button>
+            <button
+              onClick={onGoToMaxZoom}
+              className="control-button secondary"
+              aria-label="Go to maximum zoom"
+            >
+              <ZoomIn size={18} />
+              <span>Max</span>
+            </button>
+          </div>
         </div>
       )}
 
@@ -299,7 +323,7 @@ export default function Sidebar({
         <div className="control-section">
           <h3>
             <Shield size={18} />
-            Advanced
+            Camera Processing
           </h3>
           <label className="toggle-switch">
             <input
@@ -318,25 +342,27 @@ export default function Sidebar({
       )}
 
       {/* Video Processing */}
-      {capabilities.stabilization && (
+      {videoCapabilities.length > 0 && (
         <div className="control-section">
           <h3>
             <Shield size={18} />
             Video Processing
           </h3>
-          <label className="toggle-switch">
-            <input
-              type="checkbox"
-              checked={videoStabilization}
-              onChange={onToggleVideoStabilization}
-              aria-label="Toggle video stabilization"
-            />
-            <span className="slider"></span>
-            <span className="toggle-label">
-              <Shield size={16} />
-              Stabilization
-            </span>
-          </label>
+          {videoCapabilities.map((capability) => (
+            <label className="toggle-switch" key={capability}>
+              <input
+                type="checkbox"
+                checked={!!videoCapabilityState[capability]}
+                onChange={() => onToggleVideoCapability(capability)}
+                aria-label={`Toggle video ${capability}`}
+              />
+              <span className="slider"></span>
+              <span className="toggle-label">
+                <Shield size={16} />
+                {capability}
+              </span>
+            </label>
+          ))}
         </div>
       )}
     </aside>

@@ -16,7 +16,7 @@ paths:
     get:
       summary: Healthcheck
       tags:
-      - system
+      - System
       responses:
         '200':
           description: OK
@@ -29,11 +29,11 @@ paths:
         default:
           $ref: '#/components/responses/DefaultError'
       operationId: getHealth
-  /stream/{cameraId}/url:
+  /cameras/{cameraId}/stream/url:
     get:
       summary: Get HLS stream URL for the camera
       tags:
-      - stream
+      - Camera Streaming
       responses:
         '200':
           description: Stream URL
@@ -54,12 +54,12 @@ paths:
       schema:
         type: integer
         minimum: 0
-        maximum: 4
+        maximum: 3
   /cameras/{cameraId}/info:
     get:
       summary: Get camera info
       tags:
-      - camera
+      - Camera Control
       responses:
         '200':
           description: Info
@@ -92,12 +92,12 @@ paths:
       schema:
         type: integer
         minimum: 0
-        maximum: 4
+        maximum: 3
   /cameras/{cameraId}/capabilities:
     get:
       summary: Get camera capabilities
       tags:
-      - camera
+      - Camera Control
       responses:
         '200':
           description: Camera capabilities
@@ -130,12 +130,12 @@ paths:
       schema:
         type: integer
         minimum: 0
-        maximum: 4
+        maximum: 3
   /cameras/{cameraId}/zoom:
     get:
       summary: Get current zoom
       tags:
-      - camera
+      - Camera Control
       responses:
         '200':
           description: Zoom value
@@ -168,11 +168,11 @@ paths:
       schema:
         type: integer
         minimum: 0
-        maximum: 4
+        maximum: 3
     put:
       summary: Set zoom
       tags:
-      - camera
+      - Camera Control
       requestBody:
         required: true
         content:
@@ -203,11 +203,79 @@ paths:
         default:
           $ref: '#/components/responses/DefaultError'
       operationId: setZoom
+  /cameras/{cameraId}/zoom/min:
+    put:
+      summary: Move zoom to minimum
+      tags:
+      - Camera Control
+      responses:
+        '200':
+          description: Zoom moved to minimum
+        '400':
+          $ref: '#/components/responses/BadRequest400'
+        '404':
+          $ref: '#/components/responses/ApiError404'
+        '409':
+          $ref: '#/components/responses/ApiError409'
+        '501':
+          $ref: '#/components/responses/ApiError501'
+        '502':
+          $ref: '#/components/responses/ApiError502'
+        '503':
+          $ref: '#/components/responses/ApiError503'
+        '500':
+          $ref: '#/components/responses/ApiError500'
+        default:
+          $ref: '#/components/responses/DefaultError'
+      operationId: goToMinZoom
+    parameters:
+    - name: cameraId
+      in: path
+      required: true
+      description: Camera index to target
+      schema:
+        type: integer
+        minimum: 0
+        maximum: 3
+  /cameras/{cameraId}/zoom/max:
+    put:
+      summary: Move zoom to maximum
+      tags:
+      - Camera Control
+      responses:
+        '200':
+          description: Zoom moved to maximum
+        '400':
+          $ref: '#/components/responses/BadRequest400'
+        '404':
+          $ref: '#/components/responses/ApiError404'
+        '409':
+          $ref: '#/components/responses/ApiError409'
+        '501':
+          $ref: '#/components/responses/ApiError501'
+        '502':
+          $ref: '#/components/responses/ApiError502'
+        '503':
+          $ref: '#/components/responses/ApiError503'
+        '500':
+          $ref: '#/components/responses/ApiError500'
+        default:
+          $ref: '#/components/responses/DefaultError'
+      operationId: goToMaxZoom
+    parameters:
+    - name: cameraId
+      in: path
+      required: true
+      description: Camera index to target
+      schema:
+        type: integer
+        minimum: 0
+        maximum: 3
   /cameras/{cameraId}/focus:
     get:
       summary: Get current focus
       tags:
-      - camera
+      - Camera Control
       responses:
         '200':
           description: Focus value
@@ -240,11 +308,11 @@ paths:
       schema:
         type: integer
         minimum: 0
-        maximum: 4
+        maximum: 3
     put:
       summary: Set focus
       tags:
-      - camera
+      - Camera Control
       requestBody:
         required: true
         content:
@@ -286,11 +354,11 @@ paths:
       schema:
         type: integer
         minimum: 0
-        maximum: 4
+        maximum: 3
     get:
       summary: Get autofocus state
       tags:
-      - camera
+      - Camera Control
       responses:
         '200':
           description: Current state
@@ -319,7 +387,7 @@ paths:
     put:
       summary: Enable/disable autofocus
       tags:
-      - camera
+      - Camera Control
       requestBody:
         required: true
         content:
@@ -359,12 +427,12 @@ paths:
       schema:
         type: integer
         minimum: 0
-        maximum: 4
+        maximum: 3
     get:
       summary: Get camera stabilization state
       description: Returns whether camera-level stabilization is currently enabled.
       tags:
-      - camera
+      - Camera Control
       operationId: getCameraStabilization
       responses:
         '200':
@@ -393,7 +461,7 @@ paths:
       summary: Enable/disable camera stabilization
       description: Controls camera-level stabilization.
       tags:
-      - camera
+      - Camera Control
       operationId: setCameraStabilization
       requestBody:
         required: true
@@ -422,7 +490,7 @@ paths:
           $ref: '#/components/responses/ApiError500'
         default:
           $ref: '#/components/responses/DefaultError'
-  /video/{cameraId}/stabilization:
+  /cameras/{cameraId}/video/capabilities:
     parameters:
     - name: cameraId
       in: path
@@ -431,17 +499,18 @@ paths:
       schema:
         type: integer
         minimum: 0
-        maximum: 4
+        maximum: 3
     get:
-      summary: Get video stabilization state
+      summary: Get enabled video capabilities
       tags:
-      - video
+      - Camera Video Processing
       responses:
         '200':
-          description: Current state
+          description: Enabled video capabilities
           content:
             application/json:
-              schema: *id002
+              schema:
+                $ref: '#/components/schemas/VideoCapabilities'
         '400':
           $ref: '#/components/responses/BadRequest400'
         '404':
@@ -458,22 +527,31 @@ paths:
           $ref: '#/components/responses/ApiError500'
         default:
           $ref: '#/components/responses/DefaultError'
-      operationId: getVideoStabilization
-      description: Returns whether video stabilization is currently enabled.
-    put:
-      summary: Enable/disable video stabilization
-      description: Controls video stabilization.
+      operationId: getVideoCapabilities
+  /cameras/{cameraId}/video/capabilities/{capability}:
+    parameters:
+    - name: cameraId
+      in: path
+      required: true
+      description: Camera index to target
+      schema:
+        type: integer
+        minimum: 0
+        maximum: 3
+    - name: capability
+      in: path
+      required: true
+      description: Video capability name to update
+      schema:
+        type: string
+    get:
+      summary: Get video capability state
+      description: Retrieves the current state (enabled/disabled) of a specific video capability.
       tags:
-      - video
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ToggleState'
+      - Camera Video Processing
       responses:
         '200':
-          description: Video stabilization set
+          description: Video capability state
           content:
             application/json:
               schema:
@@ -494,7 +572,42 @@ paths:
           $ref: '#/components/responses/ApiError500'
         default:
           $ref: '#/components/responses/DefaultError'
-      operationId: setVideoStabilization
+      operationId: getVideoCapabilityState
+    put:
+      summary: Enable/disable a video capability
+      description: Controls a specific video capability by name.
+      tags:
+      - Camera Video Processing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ToggleState'
+      responses:
+        '200':
+          description: Video capability updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToggleState'
+        '400':
+          $ref: '#/components/responses/BadRequest400'
+        '404':
+          $ref: '#/components/responses/ApiError404'
+        '409':
+          $ref: '#/components/responses/ApiError409'
+        '501':
+          $ref: '#/components/responses/ApiError501'
+        '502':
+          $ref: '#/components/responses/ApiError502'
+        '503':
+          $ref: '#/components/responses/ApiError503'
+        '500':
+          $ref: '#/components/responses/ApiError500'
+        default:
+          $ref: '#/components/responses/DefaultError'
+      operationId: setVideoCapability
 components:
   schemas:
     HealthStatus:
@@ -614,6 +727,7 @@ components:
       type: string
       description: Supported camera capability.
       enum:
+      - UNSPECIFIED
       - ZOOM
       - FOCUS
       - AUTO_FOCUS
@@ -634,6 +748,18 @@ components:
           - FOCUS
           - AUTO_FOCUS
           - STABILIZATION
+      required:
+      - capabilities
+    VideoCapabilities:
+      type: object
+      description: List of currently enabled video capabilities.
+      properties:
+        capabilities:
+          type: array
+          items:
+            type: string
+          example:
+          - stabilization
       required:
       - capabilities
   responses:
@@ -714,11 +840,11 @@ components:
           schema:
             $ref: '#/components/schemas/ApiError'
 tags:
-- name: system
+- name: System
   description: System endpoints (health, readiness).
-- name: stream
-  description: Endpoints related to video streaming.
-- name: camera
-  description: Camera control and status.
-- name: video
-  description: Video processing controls.
+- name: Camera Streaming
+  description: Endpoints for camera video streaming.
+- name: Camera Control
+  description: Camera control and status endpoints.
+- name: Camera Video Processing
+  description: Video processing and enhancement controls.

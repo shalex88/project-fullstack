@@ -36,17 +36,27 @@ export function createCoreClient() {
     SetFocus: (req: { camera_id: number; focus: number }, cb: (err: grpc.ServiceError | null, res: {}) => void) => void;
     GetFocus: (req: { camera_id: number }, cb: (err: grpc.ServiceError | null, res: { focus: number }) => void) => void;
     GetInfo: (req: { camera_id: number }, cb: (err: grpc.ServiceError | null, res: { info: string }) => void) => void;
+    GetCapabilities: (
+      req: { camera_id: number },
+      cb: (err: grpc.ServiceError | null, res: { capabilities: string[] }) => void
+    ) => void;
     SetAutoFocus: (req: { camera_id: number; enable: boolean }, cb: (err: grpc.ServiceError | null, res: {}) => void) => void;
+    GetAutoFocus: (req: { camera_id: number }, cb: (err: grpc.ServiceError | null, res: { enable: boolean }) => void) => void;
     SetStabilization: (req: { camera_id: number; enable: boolean }, cb: (err: grpc.ServiceError | null, res: {}) => void) => void;
+    GetStabilization: (req: { camera_id: number }, cb: (err: grpc.ServiceError | null, res: { enable: boolean }) => void) => void;
     GoToMinZoom: (req: { camera_id: number }, cb: (err: grpc.ServiceError | null, res: {}) => void) => void;
     GoToMaxZoom: (req: { camera_id: number }, cb: (err: grpc.ServiceError | null, res: {}) => void) => void;
-    EnableOptionalElement: (
-      req: { camera_id: number; element: string },
+    GetVideoCapabilities: (
+      req: { camera_id: number },
+      cb: (err: grpc.ServiceError | null, res: { capabilities: string[] }) => void
+    ) => void;
+    SetVideoCapabilityState: (
+      req: { camera_id: number; capability: string; enable: boolean },
       cb: (err: grpc.ServiceError | null, res: {}) => void
     ) => void;
-    DisableOptionalElement: (
-      req: { camera_id: number; element: string },
-      cb: (err: grpc.ServiceError | null, res: {}) => void
+    GetVideoCapabilityState: (
+      req: { camera_id: number; capability: string },
+      cb: (err: grpc.ServiceError | null, res: { enable: boolean }) => void
     ) => void;
   };
 }

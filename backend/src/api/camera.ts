@@ -53,6 +53,38 @@ export function registerCameraRoutes(app: FastifyInstance) {
     }
   });
 
+  app.put('/api/v1/cameras/:cameraId/zoom/min', async (req, reply) => {
+    try {
+      const params = CameraIdSchema.parse(req.params);
+      await withTimeout(
+        new Promise((resolve, reject) =>
+          client.GoToMinZoom({ camera_id: params.cameraId }, (err: any) => (err ? reject(err) : resolve(null)))
+        )
+      );
+      logger.info('GoToMinZoom', { camera_id: params.cameraId });
+      return reply.status(200).send();
+    } catch (err: any) {
+      const mapped = mapGrpcError(err);
+      return reply.status(mapped.statusCode).send(mapped.body);
+    }
+  });
+
+  app.put('/api/v1/cameras/:cameraId/zoom/max', async (req, reply) => {
+    try {
+      const params = CameraIdSchema.parse(req.params);
+      await withTimeout(
+        new Promise((resolve, reject) =>
+          client.GoToMaxZoom({ camera_id: params.cameraId }, (err: any) => (err ? reject(err) : resolve(null)))
+        )
+      );
+      logger.info('GoToMaxZoom', { camera_id: params.cameraId });
+      return reply.status(200).send();
+    } catch (err: any) {
+      const mapped = mapGrpcError(err);
+      return reply.status(mapped.statusCode).send(mapped.body);
+    }
+  });
+
   app.get('/api/v1/cameras/:cameraId/focus', async (req, reply) => {
     try {
       const params = CameraIdSchema.parse(req.params);
@@ -122,6 +154,22 @@ export function registerCameraRoutes(app: FastifyInstance) {
     }
   });
 
+  app.get('/api/v1/cameras/:cameraId/autofocus', async (req, reply) => {
+    try {
+      const params = CameraIdSchema.parse(req.params);
+      const res = await withTimeout(
+        new Promise<{ enable: boolean }>((resolve, reject) =>
+          client.GetAutoFocus({ camera_id: params.cameraId }, (err: any, data: any) => (err ? reject(err) : resolve(data)))
+        )
+      );
+      logger.info('GetAutoFocus', { camera_id: params.cameraId, enable: res.enable });
+      return { enable: res.enable };
+    } catch (err: any) {
+      const mapped = mapGrpcError(err);
+      return reply.status(mapped.statusCode).send(mapped.body);
+    }
+  });
+
   app.put('/api/v1/cameras/:cameraId/autofocus', async (req: any, reply) => {
     try {
       const params = CameraIdSchema.parse(req.params);
@@ -142,10 +190,13 @@ export function registerCameraRoutes(app: FastifyInstance) {
   app.get('/api/v1/cameras/:cameraId/stabilization', async (req, reply) => {
     try {
       const params = CameraIdSchema.parse(req.params);
-      // TODO: Add GetStabilization RPC when available
-      // For now, return a placeholder or cached state
-      logger.info('GetCameraStabilization (not implemented)', { camera_id: params.cameraId });
-      return { enable: false };
+      const res = await withTimeout(
+        new Promise<{ enable: boolean }>((resolve, reject) =>
+          client.GetStabilization({ camera_id: params.cameraId }, (err: any, data: any) => (err ? reject(err) : resolve(data)))
+        )
+      );
+      logger.info('GetCameraStabilization', { camera_id: params.cameraId, enable: res.enable });
+      return { enable: res.enable };
     } catch (err: any) {
       const mapped = mapGrpcError(err);
       return reply.status(mapped.statusCode).send(mapped.body);

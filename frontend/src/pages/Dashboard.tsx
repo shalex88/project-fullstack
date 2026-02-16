@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import Player, { PlayerRef } from '../components/Player';
 import Sidebar from '../components/Sidebar';
 import { ToastContainer, ToastMessage } from '../components/Toast';
-import { getStreamUrl, getZoom, setZoom, getFocus, setFocus, setAutofocus, getCameraInfo, setCameraStabilization, setVideoStabilization, detectCameraCapabilities, CameraCapabilities, isServerReachable } from '../services/api';
+import { getStreamUrl, getZoom, setZoom, goToMinZoom, goToMaxZoom, getFocus, setFocus, setAutofocus, getCameraInfo, getCameraStabilization, setCameraStabilization, getVideoCapabilities, getVideoCapabilityState, setVideoCapability, detectCameraCapabilities, CameraCapabilities, isServerReachable } from '../services/api';
 
 export default function Dashboard() {
   const [streamUrl, setStreamUrl] = useState<string>('');
@@ -13,7 +13,8 @@ export default function Dashboard() {
   const [focusInput, setFocusInput] = useState<string>('0');
   const [autofocus, setAutofocusState] = useState(true); // default per simulator behavior
   const [cameraStabilization, setCameraStabilizationState] = useState(false);
-  const [videoStabilization, setVideoStabilizationState] = useState(false);
+  const [videoCapabilities, setVideoCapabilities] = useState<string[]>([]);
+  const [videoCapabilityState, setVideoCapabilityState] = useState<Record<string, boolean>>({});
   const [cameraInfo, setCameraInfo] = useState<string>('');
   const [connected, setConnected] = useState(false);
   const [capabilities, setCapabilities] = useState<CameraCapabilities>({
@@ -24,6 +25,7 @@ export default function Dashboard() {
   });
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
   const playerRef = useRef<PlayerRef>(null);
+  const initializationRef = useRef(false);
 
   const showToast = (message: string, type: ToastMessage['type'] = 'info') => {
     const id = Date.now().toString();
@@ -35,6 +37,10 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
+    // Prevent duplicate initialization in React StrictMode
+    if (initializationRef.current) return;
+    initializationRef.current = true;
+
     const initCamera = async () => {
       try {
         // First detect what features are available
@@ -58,11 +64,34 @@ export default function Dashboard() {
         setCameraInfo(info);
         setConnected(true);
 
+        if (caps.stabilization) {
+          const cameraStabilizationEnabled = await getCameraStabilization();
+          setCameraStabilizationState(cameraStabilizationEnabled);
+        }
+
+        const currentVideoCapabilities = await getVideoCapabilities();
+        const knownVideoCapabilities = Array.from(new Set(currentVideoCapabilities.filter((capability) => capability?.trim?.().length > 0)));
+        setVideoCapabilities(knownVideoCapabilities);
+
+        // Fetch the actual state for each capability
+        const capabilityStates: Record<string, boolean> = {};
+        for (const capability of knownVideoCapabilities) {
+          try {
+            const isEnabled = await getVideoCapabilityState(capability);
+            capabilityStates[capability] = isEnabled;
+          } catch (err) {
+            console.warn(`Failed to get state for capability ${capability}:`, err);
+            capabilityStates[capability] = false;
+          }
+        }
+        setVideoCapabilityState(capabilityStates);
+
         showToast(`Camera connected. Available: ${[
           caps.zoom ? 'Zoom' : null,
           caps.focus ? 'Focus' : null,
           caps.autofocus ? 'Autofocus' : null,
           caps.stabilization ? 'Stabilization' : null,
+          knownVideoCapabilities.length > 0 ? `Video(${knownVideoCapabilities.join(', ')})` : null,
         ].filter(Boolean).join(', ')}`, 'info');
       } catch (err) {
         console.error('Init failed:', err);
@@ -138,6 +167,36 @@ export default function Dashboard() {
     }
   };
 
+  const handleGoToMinZoom = async () => {
+    try {
+      await goToMinZoom();
+      const newZoom = await getZoom();
+      setZoomState(newZoom);
+      setZoomInput(newZoom.toString());
+      showToast('Zoom set to minimum', 'info');
+    } catch (err) {
+      console.error('Go to min zoom failed:', err);
+      showToast('Failed to set zoom to minimum', 'error');
+      const reachable = await isServerReachable();
+      if (!reachable) setConnected(false);
+    }
+  };
+
+  const handleGoToMaxZoom = async () => {
+    try {
+      await goToMaxZoom();
+      const newZoom = await getZoom();
+      setZoomState(newZoom);
+      setZoomInput(newZoom.toString());
+      showToast('Zoom set to maximum', 'info');
+    } catch (err) {
+      console.error('Go to max zoom failed:', err);
+      showToast('Failed to set zoom to maximum', 'error');
+      const reachable = await isServerReachable();
+      if (!reachable) setConnected(false);
+    }
+  };
+
   const handleToggleAutofocus = async () => {
     try {
       const enabled = !autofocus;
@@ -170,14 +229,17 @@ export default function Dashboard() {
     }
   };
 
-  const handleToggleVideoStabilization = async () => {
+  const handleToggleVideoCapability = async (capability: string) => {
     try {
-      const enabled = !videoStabilization;
-      await setVideoStabilization(enabled);
-      setVideoStabilizationState(enabled);
+      const enabled = !videoCapabilityState[capability];
+      await setVideoCapability(capability, enabled);
+      setVideoCapabilityState((previous) => ({
+        ...previous,
+        [capability]: enabled,
+      }));
     } catch (err) {
-      console.error('Video stabilization toggle failed:', err);
-      showToast('Failed to toggle video stabilization', 'error');
+      console.error('Video capability toggle failed:', err);
+      showToast(`Failed to toggle video capability: ${capability}`, 'error');
       const reachable = await isServerReachable();
       if (!reachable) setConnected(false);
     }
@@ -246,6 +308,8 @@ export default function Dashboard() {
         onGoToZoom={handleGoToZoom}
         onZoomIn={handleZoomIn}
         onZoomOut={handleZoomOut}
+        onGoToMinZoom={handleGoToMinZoom}
+        onGoToMaxZoom={handleGoToMaxZoom}
         focus={focus}
         focusInput={focusInput}
         onFocusInputChange={handleFocusInputChange}
@@ -256,8 +320,9 @@ export default function Dashboard() {
         onToggleAutofocus={handleToggleAutofocus}
         cameraStabilization={cameraStabilization}
         onToggleCameraStabilization={handleToggleCameraStabilization}
-        videoStabilization={videoStabilization}
-        onToggleVideoStabilization={handleToggleVideoStabilization}
+        videoCapabilities={videoCapabilities}
+        videoCapabilityState={videoCapabilityState}
+        onToggleVideoCapability={handleToggleVideoCapability}
         connected={connected}
         cameraInfo={cameraInfo}
         capabilities={capabilities}
