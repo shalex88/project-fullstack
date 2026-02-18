@@ -1,4 +1,4 @@
-const BACKEND_IP = import.meta.env.BACKEND_IP || 'localhost';
+const BACKEND_IP = import.meta.env.VITE_BACKEND_IP || 'localhost';
 const API_BASE = `http://${BACKEND_IP}:3000/api/v1`;
 const CAMERA_ID = 1; // Assuming a single camera setup for simplicity
 

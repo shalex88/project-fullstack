@@ -101,7 +101,7 @@ if [[ ! -d node_modules ]]; then
   npm install
 fi
 
-echo "BACKEND_IP=$BACKEND_IP" > .env
+echo "VITE_BACKEND_IP=$BACKEND_IP" > .env
 
 if port_in_use 5173; then
   echo "[dev] Frontend port 5173 already in use; skipping start."
