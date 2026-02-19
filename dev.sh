@@ -66,7 +66,7 @@ BACKEND_IP=$(hostname -I | awk '{print $1}')
 
 echo "PORT=3000" > .env
 echo "CAMERA_GRPC=$TARGET_IP:50051" >> .env
-echo "HLS_URL=http://$TARGET_IP:8888/camera1/index.m3u8" >> .env
+echo "WEBRTC_URL=http://$TARGET_IP:8889/camera1/" >> .env
 echo "BACKEND_IP=$BACKEND_IP" >> .env
 
 port_in_use() {
@@ -124,6 +124,7 @@ echo "- Backend health:   http://$BACKEND_IP:3000/api/health"
 echo "- Stream URL API:   http://$BACKEND_IP:3000/api/stream/url"
 echo "- Frontend (Vite):  http://$BACKEND_IP:5173"
 echo "- HLS stream (raw): http://$BACKEND_IP:8888/camera1/index.m3u8"
+echo "- WebRTC stream (raw): http://$BACKEND_IP:8889/camera1/"
 
 echo "\n[dev] Tailing logs (Ctrl+C to stop):"
 echo "--- $SERVICES_LOG ---"

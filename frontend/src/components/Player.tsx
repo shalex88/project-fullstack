@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState, forwardRef, useImperativeHandle } from 'react';
-import Hls from 'hls.js';
 
 interface PlayerProps {
   streamUrl: string;
@@ -10,9 +9,93 @@ export interface PlayerRef {
   captureSnapshot: () => void;
 }
 
+async function connectWhep(peerConnection: RTCPeerConnection, baseUrl: string): Promise<void> {
+  // Ensure URL doesn't have trailing slash for WHEP
+  const url = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+  const whepUrl = `${url}/whep`;
+
+  console.log('WHEP connecting to:', whepUrl);
+
+  // Add transceivers for video and audio (required for WHEP)
+  peerConnection.addTransceiver('video', { direction: 'sendrecv' });
+  peerConnection.addTransceiver('audio', { direction: 'sendrecv' });
+
+  // Get ICE servers via OPTIONS
+  try {
+    const optionsRes = await fetch(whepUrl, { method: 'OPTIONS' });
+    console.log('OPTIONS response:', optionsRes.status);
+  } catch (err) {
+    console.warn('OPTIONS request failed (non-critical):', err);
+  }
+
+  // Create and send offer
+  const offer = await peerConnection.createOffer();
+  await peerConnection.setLocalDescription(offer);
+
+  console.log('Offer SDP:', offer.sdp);
+  console.log('Offer SDP length:', offer.sdp?.length);
+
+  const postRes = await fetch(whepUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/sdp',
+    },
+    body: offer.sdp,
+  });
+
+  console.log('POST response status:', postRes.status);
+  console.log('POST response headers:', {
+    location: postRes.headers.get('location'),
+    contentType: postRes.headers.get('content-type'),
+  });
+
+  if (postRes.status !== 201) {
+    const errorText = await postRes.text();
+    console.error('WHEP error response:', errorText);
+    throw new Error(`WHEP connection failed: ${postRes.status} ${postRes.statusText} - ${errorText}`);
+  }
+
+  // Get session URL from Location header
+  const sessionUrl = postRes.headers.get('location');
+  if (!sessionUrl) {
+    throw new Error('WHEP server did not return session URL');
+  }
+
+  console.log('Session URL:', sessionUrl);
+
+  // Get answer SDP
+  const answerSdp = await postRes.text();
+  console.log('Answer SDP:', answerSdp);
+  console.log('Answer SDP length:', answerSdp?.length);
+
+  if (!answerSdp) {
+    throw new Error('WHEP server returned empty answer');
+  }
+
+  const answer = new RTCSessionDescription({ type: 'answer', sdp: answerSdp });
+  await peerConnection.setRemoteDescription(answer);
+
+  // Handle ICE candidates
+  peerConnection.onicecandidate = (event) => {
+    if (event.candidate) {
+      console.log('Sending ICE candidate');
+      const candidateSdp = `a=ice-ufrag:${event.candidate.usernameFragment || ''}\r\na=${event.candidate.candidate}`;
+      fetch(sessionUrl, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/trickle-ice-sdpfrag',
+          'If-Match': '*',
+        },
+        body: candidateSdp,
+      }).catch(err => console.warn('Failed to send candidate:', err));
+    }
+  };
+}
+
 const Player = forwardRef<PlayerRef, PlayerProps>(({ streamUrl, isPlaying }, ref) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [error, setError] = useState<string | null>(null);
+  const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
 
   useImperativeHandle(ref, () => ({
     captureSnapshot: () => {
@@ -45,25 +128,31 @@ const Player = forwardRef<PlayerRef, PlayerProps>(({ streamUrl, isPlaying }, ref
 
     setError(null);
 
-    if (Hls.isSupported()) {
-      const hls = new Hls();
-      hls.loadSource(streamUrl);
-      hls.attachMedia(video);
+    const peerConnection = new RTCPeerConnection({
+      iceServers: [{ urls: ['stun:stun.l.google.com:19302'] }],
+    });
 
-      hls.on(Hls.Events.ERROR, (_, data) => {
-        if (data.fatal) {
-          setError(`HLS error: ${data.type}`);
-        }
+    peerConnection.ontrack = (event) => {
+      if (event.streams && event.streams[0]) {
+        video.srcObject = event.streams[0];
+      }
+    };
+
+    peerConnection.onerror = () => {
+      setError('WebRTC connection error');
+    };
+
+    peerConnectionRef.current = peerConnection;
+
+    connectWhep(peerConnection, streamUrl)
+      .catch((err) => {
+        setError(`Failed to connect: ${err.message}`);
       });
 
-      return () => {
-        hls.destroy();
-      };
-    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-      video.src = streamUrl;
-    } else {
-      setError('HLS not supported in this browser');
-    }
+    return () => {
+      peerConnection.close();
+      peerConnectionRef.current = null;
+    };
   }, [streamUrl, isPlaying]);
 
   if (!isPlaying) {
