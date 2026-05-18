@@ -10,7 +10,7 @@ VERSION=$(echo "$VERSION" | tr -d '[:space:]')
 ARCH="arm64"
 
 # Create build directory
-BUILD_DIR="$PROJECT_ROOT/build-cross"
+BUILD_DIR="$PROJECT_ROOT/build/build-cross"
 mkdir -p "$BUILD_DIR"
 
 # Create temporary directory for .deb package structure
